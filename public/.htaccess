@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# Пропускаем файлы, если они существуют (например, uploads)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Перенаправляем всё остальное в index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L]

@@ -16,6 +16,7 @@ use Src\Services\AuthService;
 use Src\Services\FileService;
 use Src\Services\FolderService;
 
+// --- Регистрируем существующие и новые сервисы в DI-контейнере ---
 App::bind('user_repository', fn() => new UserRepository());
 App::bind('file_repository', fn() => new FileRepository());
 App::bind('folder_repository', fn() => new FolderRepository());
@@ -25,10 +26,18 @@ App::bind('folder_service', fn() => new FolderService());
 App::bind('shared_file_repository', fn() => new \Src\Repositories\SharedFileRepository());
 App::bind('shared_folder_repository', fn() => new \Src\Repositories\SharedFolderRepository());
 
+// --- Новые сервисы и репозитории для групп и шаринга по группам ---
+App::bind('user_group_repository', fn() => new \Src\Repositories\UserGroupRepository());
+App::bind('user_group_member_repository', fn() => new \Src\Repositories\UserGroupMemberRepository());
+App::bind('shared_resource_by_group_repository', fn() => new \Src\Repositories\SharedResourceByGroupRepository());
+App::bind('group_service', fn() => new \Src\Services\GroupService());
+App::bind('share_by_group_service', fn() => new \Src\Services\ShareByGroupService());
+// ---
+
 $request = new Request();
 $router = new Router();
 
-// Главная и файлы
+// --- Существующие маршруты ---
 $router->add('GET', '', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
     $controller->index($request, $response);
@@ -94,7 +103,6 @@ $router->add('GET', 'download', function (Request $request, Response $response) 
     $controller->download($request, $response);
     // Важно: метод download сам вызывает exit() после отправки файла
 });
-
 
 $router->add('POST', 'share-file', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\ShareController();
@@ -185,7 +193,49 @@ $router->add('GET', 'get-shared-users/folder/{folderId}', function (Request $req
     $response->setData(['user_ids' => $userIds]);
     $response->sendJson();
 });
+// ---
 
+// --- Новые маршруты для управления группами и шарингом по группам ---
+$router->add('GET', 'manage-groups', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\GroupController();
+    $controller->manageGroups($request, $response);
+});
+
+$router->add('POST', 'create-group', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\GroupController();
+    $controller->createGroup($request, $response);
+});
+
+$router->add('POST', 'update-group', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\GroupController();
+    $controller->updateGroup($request, $response);
+});
+
+$router->add('POST', 'delete-group', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\GroupController();
+    $controller->deleteGroup($request, $response);
+});
+
+$router->add('POST', 'add-user-to-group', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\GroupController();
+    $controller->addUserToGroup($request, $response);
+});
+
+$router->add('POST', 'remove-user-from-group', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\GroupController();
+    $controller->removeUserFromGroup($request, $response);
+});
+
+$router->add('POST', 'share-resource-by-group', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\ShareByGroupController();
+    $controller->shareResource($request, $response);
+});
+
+$router->add('GET', 'admin/groups', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\GroupController();
+    $controller->showAdminPanel($request, $response);
+});
+// ---
 
 // Обработка запроса
 $route = $request->getRoute();

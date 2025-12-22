@@ -237,6 +237,11 @@ $router->add('POST', 'share-resource-by-group', function (Request $request, Resp
     $controller = new \Src\Controllers\ShareByGroupController();
     $controller->shareResource($request, $response);
 });
+
+$router->add('GET', 'get-groups', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\ShareController();
+    $controller->getGroups($request, $response);
+});
 // ---
 
 // Обработка запроса

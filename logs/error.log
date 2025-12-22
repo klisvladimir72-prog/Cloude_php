@@ -224,3 +224,33 @@
     [:file_id] => 8
 )
 
+[22-Dec-2025 17:34:29 Etc/GMT-3] SQL: SELECT * FROM shared_folders WHERE folder_id = :folder_id
+[22-Dec-2025 17:34:29 Etc/GMT-3] Params: Array
+(
+    [:folder_id] => 3
+)
+
+[22-Dec-2025 17:51:42 Etc/GMT-3] SQL: SELECT * FROM files WHERE folder_id IS NULL AND user_id = :user_id
+[22-Dec-2025 17:51:42 Etc/GMT-3] Params: Array
+(
+    [:user_id] => 3
+)
+
+[22-Dec-2025 17:51:42 Etc/GMT-3] SQL: SELECT * FROM folders WHERE parent_id IS NULL AND user_id = :user_id
+[22-Dec-2025 17:51:42 Etc/GMT-3] Params: Array
+(
+    [:user_id] => 3
+)
+
+[22-Dec-2025 17:51:42 Etc/GMT-3] SQL: SELECT * FROM shared_folders WHERE shared_with_email = :shared_with_email
+[22-Dec-2025 17:51:42 Etc/GMT-3] Params: Array
+(
+    [:shared_with_email] => klish91@inbox.ru
+)
+
+[22-Dec-2025 17:51:42 Etc/GMT-3] SQL: SELECT * FROM shared_files WHERE shared_with_email = :shared_with_email
+[22-Dec-2025 17:51:42 Etc/GMT-3] Params: Array
+(
+    [:shared_with_email] => klish91@inbox.ru
+)
+

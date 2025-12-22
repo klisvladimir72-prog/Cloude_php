@@ -21,11 +21,13 @@ class ShareController
 
             $data = $request->getData();
             $fileId = $data['file_id'] ?? null;
-            $userIds = $data['user_ids'] ?? [];
+            $userIds = $data['user_ids'] ?? []; // Массив ID пользователей
+            $groupIds = $data['group_ids'] ?? []; // Массив ID групп
 
-            if (!$fileId || empty($userIds)) {
+            // Проверяем, что передан хотя бы один список (пользователей или групп)
+            if (!$fileId || (empty($userIds) && empty($groupIds))) {
                 http_response_code(400);
-                $response->setData(['success' => false, 'message' => 'ID файла и пользователи обязательны']);
+                $response->setData(['success' => false, 'message' => 'ID файла и пользователи/группы обязательны']);
                 $response->sendJson();
                 return;
             }
@@ -36,6 +38,7 @@ class ShareController
 
             $file = $fileRepo->find('files', $fileId);
 
+            // Проверяем, является ли пользователь владельцем файла
             if (!$file || $file['user_id'] !== $_SESSION['user_id']) {
                 http_response_code(403);
                 $response->setData(['success' => false, 'message' => 'Нет прав на файл']);
@@ -45,38 +48,65 @@ class ShareController
 
             $successCount = 0;
 
-            foreach ($userIds as $userId) {
-                $user = $userRepo->find('users', $userId);
-                if (!$user) {
-                    continue;
-                }
+            // --- Шаринг по пользователям ---
+            if (!empty($userIds)) {
+                foreach ($userIds as $userId) {
+                    $user = $userRepo->find('users', $userId);
+                    if (!$user) {
+                        continue;
+                    }
 
-                $sharedWithEmail = $user['email'];
+                    $sharedWithEmail = $user['email'];
 
-                $existingShare = $sharedFileRepo->findBy('shared_files', [
-                    'file_id' => $fileId,
-                    'shared_with_email' => $sharedWithEmail
-                ]);
-
-                if (empty($existingShare)) {
-                    $sharedFileRepo->create([
+                    $existingShare = $sharedFileRepo->findBy('shared_files', [
                         'file_id' => $fileId,
-                        'shared_by' => $_SESSION['user_id'],
                         'shared_with_email' => $sharedWithEmail
                     ]);
-                    $successCount++;
+
+                    if (empty($existingShare)) {
+                        $sharedFileRepo->create([
+                            'file_id' => $fileId,
+                            'shared_by' => $_SESSION['user_id'],
+                            'shared_with_email' => $sharedWithEmail
+                        ]);
+                        $successCount++;
+                    }
                 }
             }
+            // ---
+
+            // --- Шаринг по группам ---
+            if (!empty($groupIds)) {
+                $shareByGroupService = App::getService('share_by_group_service');
+                $permissions = 'read'; // Установите нужный уровень доступа, возможно, из $data
+
+                foreach ($groupIds as $groupId) {
+                    // Проверяем, существует ли группа (опционально, но рекомендуется)
+                    $groupRepo = App::getService('user_group_repository');
+                    $group = $groupRepo->find('user_groups', $groupId);
+                    if (!$group) {
+                        continue; // Пропускаем несуществующую группу
+                    }
+
+                    // Вызываем метод для шаринга файла с группой
+                    // Этот метод уже проверяет транзакции и т.д.
+                    $wasShared = $shareByGroupService->shareFile($fileId, $groupId, $permissions, $_SESSION['user_id']);
+                    if ($wasShared) {
+                        $successCount++; // Считаем как успешный шаринг, хотя это может быть обновление
+                    }
+                }
+            }
+            // ---
 
             if ($successCount > 0) {
                 $response->setData([
                     'success' => true,
-                    'message' => "Файл успешно поделён с {$successCount} новыми пользователями."
+                    'message' => "Файл успешно поделён с {$successCount} сущностями (пользователями или группами)."
                 ]);
             } else {
                 $response->setData([
-                    'success' => true,
-                    'message' => "Файл уже был поделён с указанными пользователями."
+                    'success' => true, // Успех, но не добавлено новых
+                    'message' => "Файл уже был поделён с указанными сущностями или не были переданы новые."
                 ]);
             }
             $response->sendJson();
@@ -104,11 +134,12 @@ class ShareController
 
             $data = $request->getData();
             $folderId = $data['folder_id'] ?? null;
-            $userIds = $data['user_ids'] ?? [];
+            $userIds = $data['user_ids'] ?? []; // Массив ID пользователей
+            $groupIds = $data['group_ids'] ?? []; // Массив ID групп
 
-            if (!$folderId || empty($userIds)) {
+            if (!$folderId || (empty($userIds) && empty($groupIds))) {
                 http_response_code(400);
-                $response->setData(['success' => false, 'message' => 'ID папки и пользователи обязательны']);
+                $response->setData(['success' => false, 'message' => 'ID папки и пользователи/группы обязательны']);
                 $response->sendJson();
                 return;
             }
@@ -128,38 +159,63 @@ class ShareController
 
             $successCount = 0;
 
-            foreach ($userIds as $userId) {
-                $user = $userRepo->find('users', $userId);
-                if (!$user) {
-                    continue;
-                }
+            // --- Шаринг по пользователям ---
+            if (!empty($userIds)) {
+                foreach ($userIds as $userId) {
+                    $user = $userRepo->find('users', $userId);
+                    if (!$user) {
+                        continue;
+                    }
 
-                $sharedWithEmail = $user['email'];
+                    $sharedWithEmail = $user['email'];
 
-                $existingShare = $sharedFolderRepo->findBy('shared_folders', [
-                    'folder_id' => $folderId,
-                    'shared_with_email' => $sharedWithEmail
-                ]);
-
-                if (empty($existingShare)) {
-                    $sharedFolderRepo->create([
+                    $existingShare = $sharedFolderRepo->findBy('shared_folders', [
                         'folder_id' => $folderId,
-                        'shared_by' => $_SESSION['user_id'],
                         'shared_with_email' => $sharedWithEmail
                     ]);
-                    $successCount++;
+
+                    if (empty($existingShare)) {
+                        $sharedFolderRepo->create([
+                            'folder_id' => $folderId,
+                            'shared_by' => $_SESSION['user_id'],
+                            'shared_with_email' => $sharedWithEmail
+                        ]);
+                        $successCount++;
+                    }
                 }
             }
+            // ---
+
+            // --- Шаринг по группам ---
+            if (!empty($groupIds)) {
+                $shareByGroupService = App::getService('share_by_group_service');
+                $permissions = 'read'; // Установите нужный уровень доступа
+
+                foreach ($groupIds as $groupId) {
+                    $groupRepo = App::getService('user_group_repository');
+                    $group = $groupRepo->find('user_groups', $groupId);
+                    if (!$group) {
+                        continue;
+                    }
+
+                    // Вызываем метод для рекурсивного шаринга папки с группой
+                    $wasShared = $shareByGroupService->shareFolderRecursively($folderId, $groupId, $permissions, $_SESSION['user_id']);
+                    if ($wasShared) {
+                        $successCount++; // Считаем как успешный шаринг, хотя это может быть обновление
+                    }
+                }
+            }
+            // ---
 
             if ($successCount > 0) {
                 $response->setData([
                     'success' => true,
-                    'message' => "Папка успешно поделена с {$successCount} новыми пользователями."
+                    'message' => "Папка успешно поделена с {$successCount} сущностями (пользователями или группами)."
                 ]);
             } else {
                 $response->setData([
                     'success' => true,
-                    'message' => "Папка уже была поделена с указанными пользователями."
+                    'message' => "Папка уже была поделена с указанными сущностями или не были переданы новые."
                 ]);
             }
             $response->sendJson();
@@ -208,13 +264,46 @@ class ShareController
         }
     }
 
-    // --- Новый метод для отображения админ-панели групп ---
+    // --- Новый метод для получения списка групп ---
+    public function getGroups(Request $request, Response $response)
+    {
+        try {
+            session_start();
+            if (!isset($_SESSION['user_id'])) {
+                http_response_code(401);
+                $response->setData(['error' => 'Требуется аутентификация']);
+                $response->sendJson();
+                return;
+            }
+
+            // Важно: В отличие от админ-панели, здесь мы НЕ проверяем, является ли пользователь админом.
+            // Любой авторизованный пользователь может видеть список групп.
+            // Это позволяет ему поделиться с группой.
+
+            $groupService = App::getService('group_service');
+            $groups = $groupService->getAllGroups(); // Возвращает все группы
+
+            $response->setData(['groups' => $groups]);
+            $response->sendJson();
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            $response->setData([
+                'success' => false,
+                'message' => 'Внутренняя ошибка сервера',
+                'debug' => $e->getMessage(),
+                'groups' => []
+            ]);
+            $response->sendJson();
+        }
+    }
+    // ---
+
+    // --- Метод для отображения админ-панели групп ---
     public function showAdminPanel(Request $request, Response $response)
     {
         session_start();
         $userId = $_SESSION['user_id'] ?? null;
 
-        // Проверяем, является ли текущий пользователь администратором
         $userRepo = App::getService('user_repository');
         $currentUser = $userRepo->find('users', $userId);
         if (!$currentUser || $currentUser['login'] !== 'admin') {
@@ -223,13 +312,11 @@ class ShareController
             return;
         }
 
-        // Получаем все сервисы, необходимые для отображения панели
         $groupService = App::getService('group_service');
 
         $groups = $groupService->getAllGroups();
         $allUsers = $userRepo->getAllUsersExcludingAdmin();
 
-        // Создаем ассоциативный массив пользователей по группам
         $usersInGroups = [];
         foreach ($groups as $group) {
             $usersInGroups[$group['id']] = $groupService->getUsersInGroup($group['id']);

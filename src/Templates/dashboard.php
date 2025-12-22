@@ -222,16 +222,17 @@
 
     // Функции шаринга (предполагается, что они реализованы)
     async function shareFile(fileId) {
-        const users = await fetchUsers();
-        if (!users) return;
+        // Получаем как пользователей, так и группы
+        const [users, groups] = await Promise.all([fetchUsers(), fetchGroups()]);
+        if (!users || !groups) return; // Если не удалось получить один из списков
 
-        const sharedUsers = await fetchSharedUsersForFile(fileId);
-        const selectedUsers = await showUserSelectionModal(users, sharedUsers);
-        if (!selectedUsers || selectedUsers.length === 0) return;
+        const selection = await showUserSelectionModal(users, groups);
+        if (!selection || (selection.users.length === 0 && selection.groups.length === 0)) return;
 
+        // Отправляем на ОДИН маршрут, передавая и пользователей, и группы
         const response = await fetch('/share-file', {
             method: 'POST',
-            body: JSON.stringify({ file_id: fileId, user_ids: selectedUsers }),
+            body: JSON.stringify({ file_id: fileId, user_ids: selection.users, group_ids: selection.groups }),
             headers: { 'Content-Type': 'application/json' }
         });
         const data = await response.json();
@@ -239,22 +240,22 @@
     }
 
     async function shareFolder(folderId) {
-        const users = await fetchUsers();
-        if (!users) return;
+        const [users, groups] = await Promise.all([fetchUsers(), fetchGroups()]);
+        if (!users || !groups) return;
 
-        const sharedUsers = await fetchSharedUsersForFolder(folderId);
-        const selectedUsers = await showUserSelectionModal(users, sharedUsers);
-        if (!selectedUsers || selectedUsers.length === 0) return;
+        const selection = await showUserSelectionModal(users, groups);
+        if (!selection || (selection.users.length === 0 && selection.groups.length === 0)) return;
 
         const response = await fetch('/share-folder', {
             method: 'POST',
-            body: JSON.stringify({ folder_id: folderId, user_ids: selectedUsers }),
+            body: JSON.stringify({ folder_id: folderId, user_ids: selection.users, group_ids: selection.groups }),
             headers: { 'Content-Type': 'application/json' }
         });
         const data = await response.json();
         alert(data.message);
     }
 
+    // Получение пользователей
     async function fetchUsers() {
         const response = await fetch('/get-users');
         const data = await response.json();
@@ -266,6 +267,20 @@
         }
 
         return data.users;
+    }
+
+    // НОВАЯ функция получения групп
+    async function fetchGroups() {
+        const response = await fetch('/get-groups'); // Используем новый маршрут
+        const data = await response.json();
+
+        if (!data || !Array.isArray(data.groups)) {
+            console.error('Ошибка при получении списка групп:', data);
+            alert('Не удалось получить список групп. Попробуйте снова позже.');
+            return null;
+        }
+
+        return data.groups;
     }
 
     async function fetchSharedUsersForFile(fileId) {
@@ -292,13 +307,20 @@
         }
     }
 
-    async function showUserSelectionModal(users, sharedUsers) {
+    // ИЗМЕНЕННАЯ функция showUserSelectionModal для отображения пользователей и групп
+    async function showUserSelectionModal(users, groups) {
         return new Promise((resolve, reject) => {
             // Добавляем проверку
             if (!Array.isArray(users)) {
                 console.error('Переданы неверные данные в showUserSelectionModal:', users);
                 alert('Произошла ошибка при загрузке списка пользователей.');
-                resolve([]);
+                resolve({ users: [], groups: [] });
+                return;
+            }
+            if (!Array.isArray(groups)) {
+                console.error('Переданы неверные данные групп в showUserSelectionModal:', groups);
+                alert('Произошла ошибка при загрузке списка групп.');
+                resolve({ users: [], groups: [] });
                 return;
             }
 
@@ -321,63 +343,96 @@
                 background: white;
                 padding: 2rem;
                 border-radius: 8px;
-                width: 500px;
+                width: 600px; /* Увеличим ширину */
                 max-height: 80vh;
                 overflow-y: auto;
             `;
 
-            // Генерируем список пользователей, используя map только если users - массив
+            // --- Генерация HTML для пользователей ---
             const userListHtml = users.map(user => `
                 <div style="margin-bottom: 0.5rem;">
                     <label>
-                        <input type="checkbox" name="user" value="${user.id}" ${sharedUsers.includes(user.id) ? 'checked' : ''}>
-                        ${user.email}
+                        <input type="checkbox" name="user" value="${user.id}">
+                        ${user.email} (${user.login})
+                    </label>
+                </div>
+            `).join('');
+
+            // --- Генерация HTML для групп ---
+            const groupListHtml = groups.map(group => `
+                <div style="margin-bottom: 0.5rem;">
+                    <label>
+                        <input type="checkbox" name="group" value="${group.id}">
+                        ${group.name}
                     </label>
                 </div>
             `).join('');
 
             content.innerHTML = `
-                <h3>Выберите пользователей</h3>
-                <div style="margin-bottom: 1rem;">
-                    <label>
-                        <input type="checkbox" id="select-all"> Выбрать всех
-                    </label>
+                <h3>Выберите пользователей и/или группы</h3>
+                <div>
+                    <h4>Пользователи</h4>
+                    <div style="margin-bottom: 1rem;">
+                        <label>
+                            <input type="checkbox" id="select-all-users"> Выбрать всех пользователей
+                        </label>
+                    </div>
+                    <div id="user-list" style="margin-bottom: 1rem; max-height: 200px; overflow-y: auto;">
+                        ${userListHtml}
+                    </div>
                 </div>
-                <div id="user-list" style="margin-bottom: 1rem; max-height: 300px; overflow-y: auto;">
-                    ${userListHtml}
+                <div>
+                    <h4>Группы</h4>
+                    <div style="margin-bottom: 1rem;">
+                        <label>
+                            <input type="checkbox" id="select-all-groups"> Выбрать все группы
+                        </label>
+                    </div>
+                    <div id="group-list" style="margin-bottom: 1rem; max-height: 200px; overflow-y: auto;">
+                        ${groupListHtml}
+                    </div>
                 </div>
-                <button id="add-btn" style="padding: 0.5rem 1rem; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Добавить</button>
+                <button id="add-btn" style="padding: 0.5rem 1rem; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Поделиться</button>
                 <button id="cancel-btn" style="margin-left: 1rem; padding: 0.5rem 1rem; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Отмена</button>
             `;
 
             modal.appendChild(content);
             document.body.appendChild(modal);
 
-            const selectAllCheckbox = document.getElementById('select-all');
+            const selectAllUsersCheckbox = document.getElementById('select-all-users');
+            const selectAllGroupsCheckbox = document.getElementById('select-all-groups');
             const userCheckboxes = document.querySelectorAll('input[name="user"]');
+            const groupCheckboxes = document.querySelectorAll('input[name="group"]');
             const addBtn = document.getElementById('add-btn');
             const cancelBtn = document.getElementById('cancel-btn');
 
-            selectAllCheckbox.addEventListener('change', (e) => {
+            selectAllUsersCheckbox.addEventListener('change', (e) => {
                 userCheckboxes.forEach(checkbox => checkbox.checked = e.target.checked);
             });
 
+            selectAllGroupsCheckbox.addEventListener('change', (e) => {
+                groupCheckboxes.forEach(checkbox => checkbox.checked = e.target.checked);
+            });
+
             addBtn.addEventListener('click', () => {
-                const selected = Array.from(userCheckboxes)
+                const selectedUsers = Array.from(userCheckboxes)
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => parseInt(checkbox.value));
+
+                const selectedGroups = Array.from(groupCheckboxes)
                     .filter(checkbox => checkbox.checked)
                     .map(checkbox => parseInt(checkbox.value));
 
                 document.body.removeChild(modal);
-                resolve(selected);
+                resolve({ users: selectedUsers, groups: selectedGroups });
             });
 
             cancelBtn.addEventListener('click', () => {
                 document.body.removeChild(modal);
-                resolve([]);
+                resolve({ users: [], groups: [] });
             });
         });
     }
-
     // УДАЛЯЕМ ФУНКЦИЮ viewFile
     // function viewFile(filename) {
     //     window.open(`/view/${filename}`, '_blank');

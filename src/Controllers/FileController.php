@@ -25,6 +25,50 @@ class FileController
         $sharedFolderRepo = App::getService('shared_folder_repository');
         $shareByGroupService = App::getService('share_by_group_service'); // <-- Новый сервис
 
+        // --- НОВАЯ ЛОГИКА: Получение всех расшаренных по группам ---
+        $sharedByGroupResources = $shareByGroupService->getResourcesSharedWithUserGroups($userId);
+        $sharedByGroupFileDetails = [];
+        $sharedByGroupFolderDetails = [];
+
+        foreach ($sharedByGroupResources as $resource) {
+            if ($resource['resource_type'] === 'file') {
+                $originalFile = $fileRepo->find('files', $resource['resource_id']);
+                if ($originalFile) { // Убрана проверка на $originalFile['user_id'] !== $userId
+                    $sharedByGroupFileDetails[$resource['resource_id']] = [
+                        'id' => $originalFile['id'],
+                        'original_name' => $originalFile['original_name'],
+                        'size' => $originalFile['size'],
+                        'filename' => $originalFile['filename'],
+                        'created_at' => $originalFile['created_at'],
+                        'user_id' => $originalFile['user_id'],
+                        'owner_email' => $this->getUserEmailById($originalFile['user_id']),
+                        'is_shared' => true,
+                        'is_shared_by_group' => true, // <-- Уточняем, что по группе
+                        'shared_entry_id' => null, // <-- Нет ID в старой таблице
+                        'folder_id' => $originalFile['folder_id'],
+                        'permissions' => $resource['permissions'] // <-- Уровень доступа
+                    ];
+                }
+            } elseif ($resource['resource_type'] === 'folder') {
+                $originalFolder = $folderRepo->find('folders', $resource['resource_id']);
+                if ($originalFolder) { // Убрана проверка на $originalFolder['user_id'] !== $userId
+                    $sharedByGroupFolderDetails[$resource['resource_id']] = [
+                        'id' => $originalFolder['id'],
+                        'name' => $originalFolder['name'],
+                        'created_at' => $originalFolder['created_at'],
+                        'user_id' => $originalFolder['user_id'],
+                        'owner_email' => $this->getUserEmailById($originalFolder['user_id']),
+                        'is_shared' => true,
+                        'is_shared_by_group' => true, // <-- Уточняем, что по группе
+                        'shared_entry_id' => null, // <-- Нет ID в старой таблице
+                        'parent_id' => $originalFolder['parent_id'],
+                        'permissions' => $resource['permissions'] // <-- Уровень доступа
+                    ];
+                }
+            }
+        }
+        // --- КОНЕЦ НОВОЙ ЛОГИКИ ---
+
         // Определяем, является ли текущая папка расшаренной (если мы внутри неё)
         $currentFolder = null;
         $isCurrentFolderShared = false;
@@ -121,55 +165,6 @@ class FileController
                         'shared_entry_id' => $entry['id'],
                         'folder_id' => $originalFile['folder_id']
                     ];
-                }
-            }
-        }
-
-        // --- Получение расшаренных элементов (по группе) ---
-        $sharedByGroupResources = $shareByGroupService->getResourcesSharedWithUserGroups($userId);
-        $sharedByGroupFileDetails = [];
-        $sharedByGroupFolderDetails = [];
-
-        foreach ($sharedByGroupResources as $resource) {
-            if ($resource['resource_type'] === 'file') {
-                $originalFile = $fileRepo->find('files', $resource['resource_id']);
-                if ($originalFile && $originalFile['user_id'] !== $userId) {
-                    // Проверяем, не добавили ли мы уже этот файл (например, по email)
-                    if (!isset($sharedFileDetails[$resource['resource_id']]) && !isset($sharedByGroupFileDetails[$resource['resource_id']])) {
-                        $sharedByGroupFileDetails[$resource['resource_id']] = [
-                            'id' => $originalFile['id'],
-                            'original_name' => $originalFile['original_name'],
-                            'size' => $originalFile['size'],
-                            'filename' => $originalFile['filename'],
-                            'created_at' => $originalFile['created_at'],
-                            'user_id' => $originalFile['user_id'],
-                            'owner_email' => $this->getUserEmailById($originalFile['user_id']),
-                            'is_shared' => true,
-                            'is_shared_by_group' => true, // <-- Уточняем, что по группе
-                            'shared_entry_id' => null, // <-- Нет ID в старой таблице
-                            'folder_id' => $originalFile['folder_id'],
-                            'permissions' => $resource['permissions'] // <-- Уровень доступа
-                        ];
-                    }
-                }
-            } elseif ($resource['resource_type'] === 'folder') {
-                $originalFolder = $folderRepo->find('folders', $resource['resource_id']);
-                if ($originalFolder && $originalFolder['user_id'] !== $userId) {
-                    // Проверяем, не добавили ли мы уже эту папку (например, по email)
-                    if (!isset($sharedFolderDetails[$resource['resource_id']]) && !isset($sharedByGroupFolderDetails[$resource['resource_id']])) {
-                        $sharedByGroupFolderDetails[$resource['resource_id']] = [
-                            'id' => $originalFolder['id'],
-                            'name' => $originalFolder['name'],
-                            'created_at' => $originalFolder['created_at'],
-                            'user_id' => $originalFolder['user_id'],
-                            'owner_email' => $this->getUserEmailById($originalFolder['user_id']),
-                            'is_shared' => true,
-                            'is_shared_by_group' => true, // <-- Уточняем, что по группе
-                            'shared_entry_id' => null, // <-- Нет ID в старой таблице
-                            'parent_id' => $originalFolder['parent_id'],
-                            'permissions' => $resource['permissions'] // <-- Уровень доступа
-                        ];
-                    }
                 }
             }
         }
@@ -282,6 +277,27 @@ class FileController
         $allFiles = array_values($allFiles);
         $allFolders = array_values($allFolders);
 
+        // --- НОВАЯ ЛОГИКА: Подготовка списка расшаренных по группам для отображения в отдельной таблице ---
+        $detailedSharedByGroupResources = [];
+        foreach ($sharedByGroupResources as $resource) {
+            $details = null;
+            if ($resource['resource_type'] === 'file') {
+                $details = $fileRepo->find('files', $resource['resource_id']);
+            } elseif ($resource['resource_type'] === 'folder') {
+                $details = $folderRepo->find('folders', $resource['resource_id']);
+            }
+            if ($details && $details['user_id'] !== $userId) { // Убедимся, что это не мой ресурс
+                $detailedSharedByGroupResources[] = [
+                    'type' => $resource['resource_type'],
+                    'details' => $details,
+                    'group_name' => $resource['group_name'],
+                    'permissions' => $resource['permissions'],
+                    'owner_email' => $this->getUserEmailById($details['user_id'])
+                ];
+            }
+        }
+        // --- КОНЕЦ НОВОЙ ЛОГИКИ ---
+
         // Получаем хлебные крошки
         $breadcrumbs = $this->getBreadcrumbs($folderId, $folderRepo);
 
@@ -292,7 +308,8 @@ class FileController
             'currentFolder' => $currentFolder,
             'isCurrentFolderShared' => $isCurrentFolderShared,
             'isCurrentFolderSharedByGroup' => $isCurrentFolderSharedByGroup, // <-- Новое поле
-            'breadcrumbs' => $breadcrumbs
+            'breadcrumbs' => $breadcrumbs,
+            'shared_resources_by_group' => $detailedSharedByGroupResources // <-- Новые данные для отображения
         ]);
     }
 

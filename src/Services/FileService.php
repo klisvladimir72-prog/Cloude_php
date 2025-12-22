@@ -12,8 +12,10 @@ class FileService
         'image/png',
         'text/plain',
         'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        'application/msword', // .doc
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+        'application/vnd.ms-excel', // .xls
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' // .xlsx
     ];
 
     public function handleUpload(array $data, array $files, int $userId, ?int $folderId = null)

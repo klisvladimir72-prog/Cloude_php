@@ -6,6 +6,11 @@ class SharedResourceByGroupRepository extends BaseRepository
 {
     protected string $table = 'shared_resources_by_group';
 
+    public function getTable(): string
+    {
+        return $this->table;
+    }
+
     /**
      * Проверяет, есть ли у пользователя доступ к ресурсу через его группы.
      *

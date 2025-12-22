@@ -110,6 +110,7 @@
                                 'txt' => '📝',
                                 'jpg', 'jpeg', 'png', 'gif' => '🖼️',
                                 'doc', 'docx' => '📝',
+                                'xls', 'xlsx' => '📊', // Добавлены иконки для Excel
                                 'zip', 'rar' => '📦',
                                 default => '📁',
                             };
@@ -146,6 +147,75 @@
             <?php endif; ?>
         </tbody>
     </table>
+
+    <!-- НОВЫЙ РАЗДЕЛ: Расшаренные ресурсы по группам -->
+    <?php if (!empty($shared_resources_by_group)): ?>
+        <h2>Расшаренные с моими группами</h2>
+        <table class="files-table shared-by-group-table"> <!-- Добавлен класс для стилизации -->
+            <thead>
+                <tr>
+                    <th>Тип</th>
+                    <th>Имя</th>
+                    <th>Дата изменения</th>
+                    <th>Размер</th>
+                    <th>Владелец</th>
+                    <th>Группа</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($shared_resources_by_group as $resource): ?>
+                    <?php if ($resource['type'] === 'folder'): ?>
+                        <tr class="folder-row shared-by-group-row"> <!-- Добавлен класс для стилизации -->
+                            <td>📁 Папка</td>
+                            <td>
+                                <span class="file-icon">📁</span>
+                                <span class="shared-item-by-group"><?= htmlspecialchars($resource['details']['name'] ?? 'Без имени') ?></span>
+                                <span class="lock-icon">🔒</span>
+                                <a href="?folder=<?= $resource['details']['id'] ?>" class="folder-link shared-link">Открыть</a>
+                            </td>
+                            <td><?= htmlspecialchars($resource['details']['created_at'] ?? '') ?></td>
+                            <td>-</td>
+                            <td><?= htmlspecialchars($resource['details']['owner_email'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($resource['group_name']) ?></td> <!-- Отображение имени группы -->
+                            <td><span class="shared-label">🔒 Общая</span></td>
+                        </tr>
+                    <?php elseif ($resource['type'] === 'file'): ?>
+                        <tr class="file-row shared-by-group-row"> <!-- Добавлен класс для стилизации -->
+                            <td>📄 Файл</td>
+                            <td>
+                                <?php
+                                $ext = strtolower(pathinfo($resource['details']['original_name'] ?? '', PATHINFO_EXTENSION));
+                                $icon = match ($ext) {
+                                    'pdf' => '📄',
+                                    'txt' => '📝',
+                                    'jpg', 'jpeg', 'png', 'gif' => '🖼️',
+                                    'doc', 'docx' => '📝',
+                                    'xls', 'xlsx' => '📊', // Добавлены иконки для Excel
+                                    'zip', 'rar' => '📦',
+                                    default => '📁',
+                                };
+                                ?>
+                                <span class="file-icon"><?= $icon ?></span>
+                                <span class="shared-item-by-group"><?= htmlspecialchars($resource['details']['original_name'] ?? 'Без имени') ?></span>
+                                <span class="lock-icon">🔒</span>
+                            </td>
+                            <td><?= htmlspecialchars($resource['details']['created_at'] ?? '') ?></td>
+                            <td><?= $resource['details']['size'] ?? 0 ?> байт</td>
+                            <td><?= htmlspecialchars($resource['details']['owner_email'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($resource['group_name']) ?></td> <!-- Отображение имени группы -->
+                            <td>
+                                <button class="btn-download" onclick="downloadFile('<?= $resource['details']['filename'] ?? '' ?>', '<?= $resource['details']['original_name'] ?? '' ?>')">Скачать</button>
+                                <span class="shared-label">🔒 Общий</span>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php endif; ?>
+    <!-- КОНЕЦ НОВОГО РАЗДЕЛА -->
+
 </div>
 
 <script>
@@ -477,6 +547,22 @@
     font-style: italic;
     color: #6c757d;
     margin-top: 10px;
+}
+
+/* Стили для нового раздела "Расшаренные с моими группами" */
+.shared-by-group-table {
+    margin-top: 2rem; /* Отступ сверху */
+    border-top: 2px solid #dee2e6; /* Легкая граница сверху */
+}
+
+.shared-item-by-group {
+    font-weight: normal;
+    color: #007bff; /* Цвет для отличия от других общих элементов */
+    font-style: italic; /* Курсив для выделения */
+}
+
+.shared-by-group-row {
+    background-color: #f8f9fa; /* Светлый фон для строк из нового раздела */
 }
 </style>
 <?php $content = ob_get_clean(); include __DIR__ . '/layout.php'; ?>

@@ -15,6 +15,17 @@ abstract class BaseRepository
         $this->db = Db::getInstance();
     }
 
+    /**
+     * Возвращает экземпляр Db.
+     * Необходим для получения PDO из репозитория в сервисах.
+     *
+     * @return Db
+     */
+    public function getDb(): Db
+    {
+        return $this->db;
+    }
+
     public function create(array $data): bool
     {
         try {

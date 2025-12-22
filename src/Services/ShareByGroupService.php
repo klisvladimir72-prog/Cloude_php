@@ -28,11 +28,11 @@ class ShareByGroupService
             $fileRepo = App::getService('file_repository');
 
             // Используем транзакцию для обеспечения целостности данных
-            $pdo = $shareRepo->db->getConnection(); // Получаем PDO из Db
+            $pdo = $shareRepo->getDb()->getConnection(); // Получаем PDO через Db
             $pdo->beginTransaction();
 
             // Шарим саму папку
-            $this->shareResource('folder', $folderId, $groupId, $permissions, $sharedByUserId, $shareRepo);
+            $this->shareResource($shareRepo->getTable(), $folderId, $groupId, $permissions, $sharedByUserId, $shareRepo);
 
             // Обходим рекурсивно подпапки и файлы
             $this->processFolderContentsRecursively($folderId, $groupId, $permissions, $sharedByUserId, $folderRepo, $fileRepo, $shareRepo);
@@ -52,21 +52,45 @@ class ShareByGroupService
     }
 
     /**
-     * Внутренний метод для добавления или обновления записи шаринга.
-     * Принимает репозиторий как параметр для доступа к его свойству $db.
+     * Шарит отдельный файл с группой.
+     * (Добавлен для полноты)
      *
-     * @param string $type
-     * @param integer $id
-     * @param integer $groupId
-     * @param string $perms
-     * @param integer $sharedByUserId
-     * @param [type] $shareRepo
+     * @param int $fileId ID файла
+     * @param int $groupId ID группы
+     * @param string $permissions Уровень доступа
+     * @param int $sharedByUserId ID пользователя, который шарит
+     * @return bool True, если успешно
+     */
+    public function shareFile(int $fileId, int $groupId, string $permissions, int $sharedByUserId): bool
+    {
+        try {
+            $shareRepo = App::getService('shared_resource_by_group_repository');
+
+            $this->shareResource('file', $fileId, $groupId, $permissions, $sharedByUserId, $shareRepo);
+            return true;
+        } catch (\Exception $e) {
+            error_log("ShareByGroupService::shareFile error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Внутренний метод для добавления или обновления записи шаринга.
+     * Принимает репозиторий как параметр для доступа к его методам.
+     *
+     * @param string $type Тип ресурса ('folder' или 'file')
+     * @param integer $id ID ресурса
+     * @param integer $groupId ID группы
+     * @param string $perms Уровень доступа
+     * @param integer $sharedByUserId ID пользователя, который шарит
+     * @param object $shareRepo Репозиторий для работы с шарингом по группам
      * @return void
      */
     private function shareResource(string $type, int $id, int $groupId, string $perms, int $sharedByUserId, $shareRepo): void
     {
         // Проверяем, не шарили ли мы уже этот ресурс с этой группой
-        $existing = $shareRepo->findBy($shareRepo->table, [
+        // Используем метод findBy из BaseRepository, который знает имя таблицы
+        $existing = $shareRepo->findBy($shareRepo->getTable(), [
             'resource_type' => $type,
             'resource_id' => $id,
             'group_id' => $groupId
@@ -91,19 +115,19 @@ class ShareByGroupService
      * Внутренний метод для рекурсивного обхода содержимого папки.
      * Принимает репозитории как параметры для избежания повторного вызова App::getService().
      *
-     * @param integer $folderId
-     * @param integer $groupId
-     * @param string $permissions
-     * @param integer $sharedByUserId
-     * @param [type] $folderRepo
-     * @param [type] $fileRepo
-     * @param [type] $shareRepo
+     * @param integer $folderId ID текущей папки
+     * @param integer $groupId ID группы
+     * @param string $permissions Уровень доступа
+     * @param integer $sharedByUserId ID пользователя, который шарит
+     * @param object $folderRepo Репозиторий для работы с папками
+     * @param object $fileRepo Репозиторий для работы с файлами
+     * @param object $shareRepo Репозиторий для работы с шарингом по группам
      * @return void
      */
     private function processFolderContentsRecursively(int $folderId, int $groupId, string $permissions, int $sharedByUserId, $folderRepo, $fileRepo, $shareRepo): void
     {
         // Получаем все подпапки текущей папки
-        $subFolders = $folderRepo->findBy($folderRepo->table, ['parent_folder_id' => $folderId]);
+        $subFolders = $folderRepo->findBy($folderRepo->getTable(), ['parent_id' => $folderId]);
         foreach ($subFolders as $subFolder) {
             // Шарим подпапку
             $this->shareResource('folder', $subFolder['id'], $groupId, $permissions, $sharedByUserId, $shareRepo);
@@ -112,9 +136,10 @@ class ShareByGroupService
         }
 
         // Получаем все файлы текущей папки
-        $files = $fileRepo->findBy($fileRepo->table, ['folder_id' => $folderId]);
+        $files = $fileRepo->findBy($fileRepo->getTable(), ['folder_id' => $folderId]);
         foreach ($files as $file) {
-            $this->shareResource('file', $file['file_id'], $groupId, $permissions, $sharedByUserId, $shareRepo);
+            // ВНИМАНИЕ: используем $file['id'], а не $file['file_id']
+            $this->shareResource('file', $file['id'], $groupId, $permissions, $sharedByUserId, $shareRepo);
         }
     }
 

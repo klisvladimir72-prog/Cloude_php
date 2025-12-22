@@ -1,0 +1,8 @@
+IHM::Version = 2015.2.14
+IHM::Date = воскресенье 07 декабрь 2025 - 14:03
+IHM::LangID = 25
+IHM::SubLangID = 4
+IHM::iDRV = 0
+Kernel::Driver x64
+Kernel::Driver v0137
+Kernel::Service D:\Programs\PC Wizard 2015\pcwiz_x64.sys

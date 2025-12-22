@@ -5,6 +5,7 @@ namespace Src\Repositories;
 class SharedResourceByGroupRepository extends BaseRepository
 {
     protected string $table = 'shared_resources_by_group';
+
     /**
      * Проверяет, есть ли у пользователя доступ к ресурсу через его группы.
      *
@@ -18,7 +19,7 @@ class SharedResourceByGroupRepository extends BaseRepository
         $sql = "
             SELECT 1 FROM {$this->table} srg
             JOIN user_group_members ugm ON srg.group_id = ugm.group_id
-            WHERE srg.resource_type = ? AND srg.resource_id = ? AND srg.user_id = ?
+            WHERE srg.resource_type = ? AND srg.resource_id = ? AND ugm.user_id = ?
             LIMIT 1 
         ";
         $stmt = $this->db->getConnection()->prepare($sql);
@@ -36,7 +37,7 @@ class SharedResourceByGroupRepository extends BaseRepository
     public function getResourcesSharedWithUserGroups(int $userId): array
     {
         $sql = "
-            SELECT srg.resource_type , srg.resource_id, srg.permission, ug.name as group_name
+            SELECT srg.resource_type, srg.resource_id, srg.permissions, ug.name as group_name
             FROM {$this->table} srg
             JOIN user_group_members ugm ON srg.group_id = ugm.group_id
             JOIN user_groups ug ON srg.group_id = ug.id

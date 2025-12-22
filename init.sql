@@ -7,6 +7,7 @@ USE cloud_storage;
 -- Таблица пользователей
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    login VARCHAR(255) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     role TINYINT DEFAULT 0, -- 0 - обычный, 1 - админ

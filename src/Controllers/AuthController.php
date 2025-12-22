@@ -21,15 +21,17 @@ class AuthController
     public function login(Request $request, Response $response)
     {
         $data = $request->getData();
-        $email = $data['email'] ?? '';
+        // Получаем email или login из запроса
+        $emailOrLogin = $data['email_or_login'] ?? ''; // Изменили имя поля
         $password = $data['password'] ?? '';
 
         $authService = App::getService('auth_service');
-        $user = $authService->authenticate($email, $password);
+        // Аутентифицируем пользователя
+        $user = $authService->authenticate($emailOrLogin, $password);
 
         if ($user) {
-            session_start();
-            $_SESSION['user_id'] = $user->id;
+            // session_start() уже вызывается внутри authenticate
+            // $_SESSION['user_id'], $_SESSION['email'], $_SESSION['login'] уже установлены
             $response->setData(['success' => true, 'redirect' => '/']);
         } else {
             http_response_code(401);
@@ -40,26 +42,26 @@ class AuthController
 
     public function register(Request $request, Response $response)
     {
-        $data = $request->getData(); // Данные из JSON уже в $data
+        $data = $request->getData();
         $email = trim($data['email'] ?? '');
+        $login = trim($data['login'] ?? ''); // Добавляем получение login
         $password = $data['password'] ?? '';
 
-        if (empty($email) || empty($password)) {
+        if (empty($email) || empty($password) || empty($login)) { // Проверяем login
             http_response_code(400);
-            $response->setData(['success' => false, 'message' => 'Email и пароль обязательны']);
+            $response->setData(['success' => false, 'message' => 'Email, Login и пароль обязательны']);
             $response->sendJson();
             return;
         }
 
         $authService = App::getService('auth_service');
-        $success = $authService->register($email, $password);
+        $success = $authService->register($email, $password, $login); // Передаем login
 
         if ($success) {
             // После успешной регистрации — сразу логиним пользователя
-            $user = $authService->authenticate($email, $password);
+            $user = $authService->authenticate($email, $password); // Можно использовать email или login
             if ($user) {
-                session_start();
-                $_SESSION['user_id'] = $user->id;
+                // session_start() и установка $_SESSION уже внутри authenticate
                 $response->setData(['success' => true, 'message' => 'Пользователь зарегистрирован', 'redirect' => '/']);
             } else {
                 http_response_code(500);
@@ -67,7 +69,7 @@ class AuthController
             }
         } else {
             http_response_code(400);
-            $response->setData(['success' => false, 'message' => 'Пользователь с таким email уже существует']);
+            $response->setData(['success' => false, 'message' => 'Пользователь с таким email или login уже существует']);
         }
         $response->sendJson();
     }

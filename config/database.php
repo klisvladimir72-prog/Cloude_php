@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'host' => '127.127.126.50',
+    'host' => '127.127.126.32',
     'database' => 'cloud_storage',
     'username' => 'root',
     'password' => '',

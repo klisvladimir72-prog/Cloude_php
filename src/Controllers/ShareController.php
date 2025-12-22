@@ -43,24 +43,22 @@ class ShareController
                 return;
             }
 
-            $successCount = 0; // Счетчик успешно добавленных шарингов
+            $successCount = 0;
 
             foreach ($userIds as $userId) {
                 $user = $userRepo->find('users', $userId);
                 if (!$user) {
-                    continue; // Пропускаем несуществующего пользователя
+                    continue;
                 }
 
                 $sharedWithEmail = $user['email'];
 
-                // Проверяем, не шарится ли файл этому пользователю уже
                 $existingShare = $sharedFileRepo->findBy('shared_files', [
                     'file_id' => $fileId,
                     'shared_with_email' => $sharedWithEmail
                 ]);
 
                 if (empty($existingShare)) {
-                    // Если не шарится, создаём новую запись
                     $sharedFileRepo->create([
                         'file_id' => $fileId,
                         'shared_by' => $_SESSION['user_id'],
@@ -68,7 +66,6 @@ class ShareController
                     ]);
                     $successCount++;
                 }
-                // Если уже шарится, просто пропускаем (без ошибки)
             }
 
             if ($successCount > 0) {
@@ -78,7 +75,7 @@ class ShareController
                 ]);
             } else {
                 $response->setData([
-                    'success' => true, // Успех, но не добавлено новых
+                    'success' => true,
                     'message' => "Файл уже был поделён с указанными пользователями."
                 ]);
             }
@@ -129,24 +126,22 @@ class ShareController
                 return;
             }
 
-            $successCount = 0; // Счетчик успешно добавленных шарингов
+            $successCount = 0;
 
             foreach ($userIds as $userId) {
                 $user = $userRepo->find('users', $userId);
                 if (!$user) {
-                    continue; // Пропускаем несуществующего пользователя
+                    continue;
                 }
 
                 $sharedWithEmail = $user['email'];
 
-                // Проверяем, не шарится ли папка этому пользователю уже
                 $existingShare = $sharedFolderRepo->findBy('shared_folders', [
                     'folder_id' => $folderId,
                     'shared_with_email' => $sharedWithEmail
                 ]);
 
                 if (empty($existingShare)) {
-                    // Если не шарится, создаём новую запись
                     $sharedFolderRepo->create([
                         'folder_id' => $folderId,
                         'shared_by' => $_SESSION['user_id'],
@@ -154,7 +149,6 @@ class ShareController
                     ]);
                     $successCount++;
                 }
-                // Если уже шарится, просто пропускаем (без ошибки)
             }
 
             if ($successCount > 0) {
@@ -164,7 +158,7 @@ class ShareController
                 ]);
             } else {
                 $response->setData([
-                    'success' => true, // Успех, но не добавлено новых
+                    'success' => true,
                     'message' => "Папка уже была поделена с указанными пользователями."
                 ]);
             }
@@ -193,14 +187,11 @@ class ShareController
 
             $userRepo = App::getService('user_repository');
 
-            // Получаем всех пользователей, кроме текущего
             $users = $userRepo->findAll('users');
             if (!is_array($users)) {
-                $users = []; // На всякий случай, если findAll вернуло не массив
+                $users = [];
             }
             $filteredUsers = array_filter($users, fn($user) => $user['id'] !== $_SESSION['user_id']);
-
-            // Преобразуем в массив, если filter его сломал
             $filteredUsers = array_values($filteredUsers);
 
             $response->setData(['users' => $filteredUsers]);
@@ -211,9 +202,44 @@ class ShareController
                 'success' => false,
                 'message' => 'Внутренняя ошибка сервера',
                 'debug' => $e->getMessage(),
-                'users' => [] // Всегда отправляем массив, даже при ошибке
+                'users' => []
             ]);
             $response->sendJson();
         }
     }
+
+    // --- Новый метод для отображения админ-панели групп ---
+    public function showAdminPanel(Request $request, Response $response)
+    {
+        session_start();
+        $userId = $_SESSION['user_id'] ?? null;
+
+        // Проверяем, является ли текущий пользователь администратором
+        $userRepo = App::getService('user_repository');
+        $currentUser = $userRepo->find('users', $userId);
+        if (!$currentUser || $currentUser['login'] !== 'admin') {
+            http_response_code(403);
+            $response->sendHtml('error.php', ['message' => 'Доступ запрещен']);
+            return;
+        }
+
+        // Получаем все сервисы, необходимые для отображения панели
+        $groupService = App::getService('group_service');
+
+        $groups = $groupService->getAllGroups();
+        $allUsers = $userRepo->getAllUsersExcludingAdmin();
+
+        // Создаем ассоциативный массив пользователей по группам
+        $usersInGroups = [];
+        foreach ($groups as $group) {
+            $usersInGroups[$group['id']] = $groupService->getUsersInGroup($group['id']);
+        }
+
+        $response->sendHtml('admin_groups.php', [
+            'groups' => $groups,
+            'allUsers' => $allUsers,
+            'usersInGroups' => $usersInGroups,
+        ]);
+    }
+    // ---
 }

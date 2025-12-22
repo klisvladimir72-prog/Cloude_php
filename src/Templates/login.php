@@ -2,11 +2,11 @@
 <div class="form-container">
     <h2>Вход в аккаунт</h2>
     <form id="login-form">
-        <label>Email:</label>
-        <input type="email" name="email" required>
+        <label for="email_or_login">Email или Логин:</label> <!-- Изменили текст -->
+        <input type="text" id="email_or_login" name="email_or_login" required> <!-- Изменили name -->
 
-        <label>Пароль:</label>
-        <input type="password" name="password" required>
+        <label for="password">Пароль:</label>
+        <input type="password" id="password" name="password" required>
 
         <button type="submit">Войти</button>
     </form>

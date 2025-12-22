@@ -196,11 +196,18 @@ $router->add('GET', 'get-shared-users/folder/{folderId}', function (Request $req
 // ---
 
 // --- Новые маршруты для управления группами и шарингом по группам ---
-$router->add('GET', 'manage-groups', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\GroupController();
-    $controller->manageGroups($request, $response);
+// Маршрут для отображения админ-панели теперь в ShareController
+$router->add('GET', 'admin/groups', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\ShareController();
+    $controller->showAdminPanel($request, $response);
 });
 
+// Маршруты для CRUD операций с группами (эти вызовы останутся такими же, как в предыдущем примере)
+// Но теперь они будут вызывать методы в GroupController.php
+// Нам нужно создать этот файл или реализовать логику в ShareController.php
+// Для простоты, давай создадим GroupController.php и перенесем туда логику
+
+// Маршруты для CRUD групп (предполагаем, что GroupController существует)
 $router->add('POST', 'create-group', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\GroupController();
     $controller->createGroup($request, $response);
@@ -229,11 +236,6 @@ $router->add('POST', 'remove-user-from-group', function (Request $request, Respo
 $router->add('POST', 'share-resource-by-group', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\ShareByGroupController();
     $controller->shareResource($request, $response);
-});
-
-$router->add('GET', 'admin/groups', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\GroupController();
-    $controller->showAdminPanel($request, $response);
 });
 // ---
 

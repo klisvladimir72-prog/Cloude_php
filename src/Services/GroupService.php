@@ -18,12 +18,12 @@ class GroupService
      * @param int $userId IВ пользователя
      * @return bool True, если пользователь админ 
      */
-    public function asAdmin(int $userId): bool
+    public function isAdmin(string $userLogin): bool
     {
         try {
             $userRepo = App::getService('user_repository');
             // Используем find из BaseRepository 
-            $user = $userRepo->find($userRepo->table, $userId);
+            $user = $userRepo->findForAuth($userLogin);
             // Возвращаем True если логин равен "admin"
             return $user && $user['login'] === 'admin';
         } catch (\Throwable $e) {
@@ -39,7 +39,7 @@ class GroupService
             $groupRepo = App::getService('user_group_repository');
 
             // Проверка на существование уже такой группы 
-            if ($groupRepo->findName($name)) {
+            if ($groupRepo->findByName($name)) {
                 error_log("GroupService::createGroup: Group with name '$name' already exist.");
                 return false;
             }
@@ -136,16 +136,13 @@ class GroupService
             $memberRepo = App::getService('user_group_member_repository');
 
             // Находим связь через findBy 
-            $relations = $memberRepo->findBy($memberRepo->table, ['user_id' => $userId, 'group_id' => $groupId]);
-            if (empty($relations)) {
-                return true; // Не состоит и так в группе 
-            }
-
-            $result = $memberRepo->delete($relations[0]['id']);
-            if (!$result) {
+            $relations = $memberRepo->isUserInGroup($userId, $groupId);
+            if ($relations == true) {
+                $result = $memberRepo->deleteUserFromGroup($userId, $groupId);
+            }else {
                 error_log("GroupService::deleteUserFromGroup: Failed to remove user ID '$userId' from group ID '$groupId'.");
             }
-
+            
             return $result;
         } catch (\Throwable $e) {
             error_log("GroupService::deleteUserFromGroup error: " . $e->getMessage());
@@ -159,7 +156,7 @@ class GroupService
         try {
             $groupRepo = App::getService('user_group_repository');
             // Используем findAll из BaseRepository 
-            $groups = $groupRepo->findAll($groupRepo->table);
+            $groups = $groupRepo->findAllGroups();
 
             return $groups;
         } catch (\Throwable $e) {
@@ -168,22 +165,22 @@ class GroupService
         }
     }
 
-    public function getAllUsersExcludingAdmin(): array
-    {
-        try {
-            $userRepo = App::getService('user_repository');
-            // Прямой SQL запрос, т.к. BaseRepository не поддерживает сложные условия в findBy
-            $sql = 'SELECT id, email, login FROM users WHERE login !=="admin"';
-            $stmt = $userRepo->db->getConnection()->prepare($sql);
-            $stmt->execute();
-            $users = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+    // public function getAllUsersExcludingAdmin(): array
+    // {
+    //     try {
+    //         $userRepo = App::getService('user_repository');
+    //         // Прямой SQL запрос, т.к. BaseRepository не поддерживает сложные условия в findBy
+    //         $sql = 'SELECT id, email, login FROM users WHERE login !=="admin"';
+    //         $stmt = $userRepo->db->getConnection()->prepare($sql);
+    //         $stmt->execute();
+    //         $users = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
 
-            return $users;
-        } catch (\Throwable $e) {
-            error_log("GroupService::getAllUsersExcludingAdmin error: " . $e->getMessage());
-            return [];
-        }
-    }
+    //         return $users;
+    //     } catch (\Throwable $e) {
+    //         error_log("GroupService::getAllUsersExcludingAdmin error: " . $e->getMessage());
+    //         return [];
+    //     }
+    // }
 
     public function getUsersInGroup(int $groupId): array
     {
@@ -196,7 +193,7 @@ class GroupService
             $users = [];
             foreach ($userIds as $userId) {
                 // Находим данные каждого пользователя по ID 
-                $user = $userRepo->find($userRepo->table, $userId); // Используем find is BaseRepository
+                $user = $userRepo->findById($userId); // Используем find is BaseRepository
                 if ($user) {
                     $users[] = $user;
                 }

@@ -55,4 +55,15 @@ class UserGroupMemberRepository extends BaseRepository
 
         return !empty($result);
     }
+
+    public function deleteUserFromGroup(int $userId, $groupId): bool{
+        try {
+            $sql = "DELETE FROM {$this->table} WHERE user_id = ? AND group_id = ?";
+            $stmt = $this->db->getConnection()->prepare($sql);
+            return $stmt->execute([$userId, $groupId]);
+        } catch (\Throwable $e) {
+            error_log("BaseRepository::delete error: " . $e->getMessage());
+            return false;
+        }
+    }
 }

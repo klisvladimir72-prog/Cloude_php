@@ -1,5 +1,3 @@
-// File: Src/Controllers/GroupController.php
-
 <?php
 
 namespace Src\Controllers;
@@ -28,16 +26,19 @@ class GroupController
     public function showAdminPanel(Request $request, Response $response)
     {
         session_start();
+        $userLogin = $_SESSION['login'];
         $userId = $_SESSION['user_id'] ?? null;
 
-        if (!$userId || !$this->groupService->isAdmin($userId)) {
+        $usersRepo = App::getService('user_repository');
+
+        if (!$userId || !$this->groupService->isAdmin($userLogin)) {
             http_response_code(403);
             $response->sendHtml('error.php', ['message' => 'Доступ запрещен']);
             return;
         }
 
         $groups = $this->groupService->getAllGroups();
-        $allUsers = $this->groupService->getAllUsersExcludingAdmin();
+        $allUsers = $usersRepo->getAllUsersExcludingAdmin();
 
         // Создаем ассоциативный массив пользователей по группам
         $usersInGroups = [];
@@ -58,9 +59,9 @@ class GroupController
     public function createGroup(Request $request, Response $response)
     {
         session_start();
-        $userId = $_SESSION['user_id'] ?? null;
+        $userLogin = $_SESSION['login'] ?? null;
 
-        if (!$userId || !$this->groupService->isAdmin($userId)) {
+        if (!$userLogin || !$this->groupService->isAdmin($userLogin)) {
             http_response_code(403);
             $response->setData(['error' => 'Доступ запрещен']);
             $response->sendJson();
@@ -92,9 +93,10 @@ class GroupController
     public function updateGroup(Request $request, Response $response)
     {
         session_start();
+        $userLogin = $_SESSION['login'];
         $userId = $_SESSION['user_id'] ?? null;
 
-        if (!$userId || !$this->groupService->isAdmin($userId)) {
+        if (!$userId || !$this->groupService->isAdmin($userLogin)) {
             http_response_code(403);
             $response->setData(['error' => 'Доступ запрещен']);
             $response->sendJson();
@@ -127,9 +129,10 @@ class GroupController
     public function deleteGroup(Request $request, Response $response)
     {
         session_start();
+        $userLogin = $_SESSION['login'];
         $userId = $_SESSION['user_id'] ?? null;
 
-        if (!$userId || !$this->groupService->isAdmin($userId)) {
+        if (!$userId || !$this->groupService->isAdmin($userLogin)) {
             http_response_code(403);
             $response->setData(['error' => 'Доступ запрещен']);
             $response->sendJson();
@@ -161,9 +164,10 @@ class GroupController
     public function addUserToGroup(Request $request, Response $response)
     {
         session_start();
+        $userLogin = $_SESSION['login'];
         $userId = $_SESSION['user_id'] ?? null;
 
-        if (!$userId || !$this->groupService->isAdmin($userId)) {
+        if (!$userId || !$this->groupService->isAdmin($userLogin)) {
             http_response_code(403);
             $response->setData(['error' => 'Доступ запрещен']);
             $response->sendJson();
@@ -196,9 +200,10 @@ class GroupController
     public function removeUserFromGroup(Request $request, Response $response)
     {
         session_start();
+        $userLogin = $_SESSION['login'];
         $userId = $_SESSION['user_id'] ?? null;
 
-        if (!$userId || !$this->groupService->isAdmin($userId)) {
+        if (!$userId || !$this->groupService->isAdmin($userLogin)) {
             http_response_code(403);
             $response->setData(['error' => 'Доступ запрещен']);
             $response->sendJson();

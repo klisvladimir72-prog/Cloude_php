@@ -10,8 +10,9 @@
     <nav class="navbar">
       <a href="/" class="logo">Cloud Storage</a>
       <div class="nav-links">
-        <?php if (isset($_SESSION['user_id'])): ?>
-        <a href="/shared">Общие файлы</a>
+        <?php if (isset($_SESSION['user_id'])): ?> <?php if (isset($_SESSION['login']) && $_SESSION['login'] === 'admin'): ?>
+        <a href="/admin/groups">Группы</a>
+        <?php endif; ?>
         <a href="/logout" class="btn-logout">Выйти</a>
         <?php else: ?>
         <a href="/login" class="btn-login">Войти</a>

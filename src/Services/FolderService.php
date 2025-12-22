@@ -11,7 +11,6 @@ class FolderService
         try {
             $repo = App::getService('folder_repository');
 
-            // Если parentId не null — проверяем, что папка существует и принадлежит пользователю
             if ($parentId !== null) {
                 $parent = $repo->find('folders', $parentId);
                 if (!$parent || $parent['user_id'] !== $userId) {
@@ -43,6 +42,11 @@ class FolderService
                 return false;
             }
 
+            // --- Новая логика: Удалить шаринги для папки перед рекурсивным удалением ---
+            $shareService = App::getService('share_by_group_service');
+            $shareService->removeSharesForResource('folder', $folderId); // Удаляем шаринги для папки
+            // ---
+
             $this->deleteContentsRecursively($folderId);
 
             return $repo->delete($folderId);
@@ -57,17 +61,24 @@ class FolderService
         try {
             $fileRepo = App::getService('file_repository');
             $folderRepo = App::getService('folder_repository');
+            $fileService = App::getService('file_service');
+            $folderService = App::getService('folder_service');
+            $shareService = App::getService('share_by_group_service'); // Для удаления шарингов
 
             $files = $fileRepo->findByFolderIdAndUserId($folderId, $_SESSION['user_id']);
             foreach ($files as $file) {
-                $fileService = App::getService('file_service');
-                $fileService->deleteFile($file['id'], $_SESSION['user_id']);
+                // Удаляем файл (и его шаринги) через его сервис
+                $fileService->deleteFile($file['id'], $file['user_id']);
             }
 
             $subFolders = $folderRepo->findBy('folders', ['parent_id' => $folderId, 'user_id' => $_SESSION['user_id']]);
             foreach ($subFolders as $subFolder) {
+                // Удаляем шаринги для подпапки
+                $shareService->removeSharesForResource('folder', $subFolder['id']);
+                // Рекурсивно удаляем содержимое подпапки
                 $this->deleteContentsRecursively($subFolder['id']);
-                $folderRepo->delete($subFolder['id']);
+                // Удаляем саму подпапку (и её шаринги)
+                $folderService->deleteFolder($subFolder['id'], $subFolder['user_id']);
             }
         } catch (\Throwable $e) {
             error_log("FolderService::deleteContentsRecursively error: " . $e->getMessage());

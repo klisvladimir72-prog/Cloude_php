@@ -49,7 +49,7 @@ class FileService
                     'size' => $file['size'],
                     'mime_type' => $mimeType,
                     'user_id' => $userId,
-                    'folder_id' => $folderId, // теперь это int или null
+                    'folder_id' => $folderId,
                 ]);
 
                 return ['success' => true, 'message' => 'Файл успешно загружен.'];
@@ -72,6 +72,11 @@ class FileService
                 return false;
             }
 
+            // --- Новая логика: Удалить шаринги ---
+            $shareService = App::getService('share_by_group_service');
+            $shareService->removeSharesForResource('file', $fileId); // Удаляем шаринги для файла
+            // ---
+
             $filePath = __DIR__ . '/../../uploads/' . $file['filename'];
             if (file_exists($filePath)) {
                 unlink($filePath);
@@ -89,6 +94,7 @@ class FileService
         try {
             $repo = App::getService('file_repository');
             $sharedFolderRepo = App::getService('shared_folder_repository');
+            $shareByGroupService = App::getService('share_by_group_service'); // <-- Новый сервис
 
             // Находим файл по имени
             $files = $repo->findBy('files', ['filename' => $fileName]);
@@ -112,30 +118,9 @@ class FileService
                 ];
             }
 
-            // Получаем folder_id файла
-            $folderId = $fileRecord['folder_id'];
-
-            // Если файл не в папке (корень), проверяем, был ли он расшарен отдельно
-            if ($folderId === null) {
-                // Проверяем, был ли файл расшарен текущему пользователю
-                $sharedFiles = $sharedFolderRepo->getByFileIdAndEmail($fileRecord['id'], $_SESSION['email']); // Используем метод, который нужно реализовать
-                if (!empty($sharedFiles)) {
-                    $uploadDir = __DIR__ . '/../../uploads/';
-                    $filePath = $uploadDir . $fileRecord['filename'];
-                    if (!file_exists($filePath)) {
-                        return null;
-                    }
-                    return [
-                        'file_record' => $fileRecord,
-                        'file_path' => $filePath
-                    ];
-                }
-                return null; // Ни владелец, ни расшарен - нет прав
-            }
-
-            // Файл находится в папке. Проверяем, была ли эта папка (или любая из её родительских) расшарена текущему пользователю
-            if ($this->isFolderSharedToUser($folderId, $_SESSION['email'], $sharedFolderRepo, $repo)) {
-                // Файл находится в расшаренной папке - имеет право на скачивание
+            // Проверяем, есть ли доступ к файлу через группы
+            if ($shareByGroupService->hasAccessByGroup($userId, 'file', $fileRecord['id'])) {
+                // Доступ через группу - имеет право
                 $uploadDir = __DIR__ . '/../../uploads/';
                 $filePath = $uploadDir . $fileRecord['filename'];
                 if (!file_exists($filePath)) {
@@ -147,7 +132,41 @@ class FileService
                 ];
             }
 
-            // Ни владелец, ни в расшаренной папке - нет прав
+            // Получаем folder_id файла
+            $folderId = $fileRecord['folder_id'];
+
+            // Если файл не в папке (корень), проверяем, был ли он расшарен отдельно (email)
+            if ($folderId === null) {
+                $sharedFiles = $sharedFolderRepo->getByFileIdAndEmail($fileRecord['id'], $_SESSION['email']);
+                if (!empty($sharedFiles)) {
+                    $uploadDir = __DIR__ . '/../../uploads/';
+                    $filePath = $uploadDir . $fileRecord['filename'];
+                    if (!file_exists($filePath)) {
+                        return null;
+                    }
+                    return [
+                        'file_record' => $fileRecord,
+                        'file_path' => $filePath
+                    ];
+                }
+                return null; // Ни владелец, ни через группу, ни расшарен (email) - нет прав
+            }
+
+            // Файл находится в папке. Проверяем, была ли эта папка (или любая из её родительских) расшарена текущему пользователю (email)
+            if ($this->isFolderSharedToUser($folderId, $_SESSION['email'], $sharedFolderRepo, $repo)) {
+                // Файл находится в расшаренной папке (email) - имеет право на скачивание
+                $uploadDir = __DIR__ . '/../../uploads/';
+                $filePath = $uploadDir . $fileRecord['filename'];
+                if (!file_exists($filePath)) {
+                    return null; // Файл физически не существует
+                }
+                return [
+                    'file_record' => $fileRecord,
+                    'file_path' => $filePath
+                ];
+            }
+
+            // Ни владелец, ни в расшаренной папке (email), ни через группу - нет прав
             return null;
         } catch (\Throwable $e) {
             error_log("FileService::prepareDownload error: " . $e->getMessage());
@@ -155,29 +174,26 @@ class FileService
         }
     }
 
-    // Вспомогательный метод для проверки, была ли папка (или её родительская) расшарена пользователю
+    // Вспомогательный метод для проверки, была ли папка (или её родительская) расшарена пользователю (email)
     private function isFolderSharedToUser(int $folderId, string $email, $sharedFolderRepo, $folderRepo): bool
     {
-        // Получаем всю цепочку родительских папок
         $currentFolderId = $folderId;
         while ($currentFolderId !== null) {
-            // Проверяем, была ли текущая папка расшарена этому email
             $sharedFolders = $sharedFolderRepo->findBy('shared_folders', [
                 'folder_id' => $currentFolderId,
                 'shared_with_email' => $email
             ]);
             if (!empty($sharedFolders)) {
-                return true; // Нашли расшаренную папку
+                return true; // Нашли расшаренную папку (email)
             }
 
-            // Переходим к родительской папке
             $folder = $folderRepo->find('folders', $currentFolderId);
             if (!$folder) {
-                break; // Папка не найдена
+                break;
             }
             $currentFolderId = $folder['parent_id'];
         }
 
-        return false; // Ни одна папка в цепочке не была расшарена
+        return false; // Ни одна папка в цепочке не была расшарена (email)
     }
 }

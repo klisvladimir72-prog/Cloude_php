@@ -32,7 +32,7 @@ class ShareByGroupService
             $pdo->beginTransaction();
 
             // Шарим саму папку
-            $this->shareResource($shareRepo->getTable(), $folderId, $groupId, $permissions, $sharedByUserId, $shareRepo);
+            $this->shareResource('folder', $folderId, $groupId, $permissions, $sharedByUserId, $shareRepo);
 
             // Обходим рекурсивно подпапки и файлы
             $this->processFolderContentsRecursively($folderId, $groupId, $permissions, $sharedByUserId, $folderRepo, $fileRepo, $shareRepo);

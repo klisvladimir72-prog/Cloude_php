@@ -148,7 +148,7 @@ class ShareController
             $sharedFolderRepo = App::getService('shared_folder_repository');
             $userRepo = App::getService('user_repository');
 
-            $folder = $folderRepo->find('folders', $folderId);
+            $folder = $folderRepo->find($folderRepo->getTable(), $folderId);
 
             if (!$folder || $folder['user_id'] !== $_SESSION['user_id']) {
                 http_response_code(403);

@@ -39,7 +39,7 @@ class GroupService
             $groupRepo = App::getService('user_group_repository');
 
             // Проверка на существование уже такой группы 
-            if ($groupRepo->findByName($name)) {
+            if ($groupRepo->findBy($groupRepo->getTable(),  ['name' => $name])) {
                 error_log("GroupService::createGroup: Group with name '$name' already exist.");
                 return false;
             }
@@ -139,10 +139,10 @@ class GroupService
             $relations = $memberRepo->isUserInGroup($userId, $groupId);
             if ($relations == true) {
                 $result = $memberRepo->deleteUserFromGroup($userId, $groupId);
-            }else {
+            } else {
                 error_log("GroupService::deleteUserFromGroup: Failed to remove user ID '$userId' from group ID '$groupId'.");
             }
-            
+
             return $result;
         } catch (\Throwable $e) {
             error_log("GroupService::deleteUserFromGroup error: " . $e->getMessage());
@@ -165,22 +165,22 @@ class GroupService
         }
     }
 
-    // public function getAllUsersExcludingAdmin(): array
-    // {
-    //     try {
-    //         $userRepo = App::getService('user_repository');
-    //         // Прямой SQL запрос, т.к. BaseRepository не поддерживает сложные условия в findBy
-    //         $sql = 'SELECT id, email, login FROM users WHERE login !=="admin"';
-    //         $stmt = $userRepo->db->getConnection()->prepare($sql);
-    //         $stmt->execute();
-    //         $users = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+    public function getAllUsersExcludingAdmin(): array
+    {
+        try {
+            $userRepo = App::getService('user_repository');
+            // Прямой SQL запрос, т.к. BaseRepository не поддерживает сложные условия в findBy
+            $sql = 'SELECT id, email, login FROM users WHERE login !=="admin"';
+            $stmt = $userRepo->db->getConnection()->prepare($sql);
+            $stmt->execute();
+            $users = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
 
-    //         return $users;
-    //     } catch (\Throwable $e) {
-    //         error_log("GroupService::getAllUsersExcludingAdmin error: " . $e->getMessage());
-    //         return [];
-    //     }
-    // }
+            return $users;
+        } catch (\Throwable $e) {
+            error_log("GroupService::getAllUsersExcludingAdmin error: " . $e->getMessage());
+            return [];
+        }
+    }
 
     public function getUsersInGroup(int $groupId): array
     {
@@ -193,7 +193,7 @@ class GroupService
             $users = [];
             foreach ($userIds as $userId) {
                 // Находим данные каждого пользователя по ID 
-                $user = $userRepo->findById($userId); // Используем find is BaseRepository
+                $user = $userRepo->find($userRepo->getTable(), $userId); // Используем find is BaseRepository
                 if ($user) {
                     $users[] = $user;
                 }

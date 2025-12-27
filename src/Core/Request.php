@@ -34,10 +34,12 @@ class Request
     {
         return $this->data;
     }
+
     public function getRoute(): string
     {
         return $this->route;
     }
+
     public function getMethod(): string
     {
         return $this->method;

@@ -19,8 +19,6 @@ class FolderService
                 }
             }
 
-            error_log("Creating folder: name=$name, user_id=$userId, parent_id=" . ($parentId ?? 'null'));
-
             return $repo->create([
                 'name' => $name,
                 'parent_id' => $parentId,

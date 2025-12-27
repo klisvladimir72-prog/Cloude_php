@@ -30,7 +30,6 @@ class ShareByGroupController
         $userId = $_SESSION['user_id'] ?? null;
 
         // Проверяем, является ли текущий пользователь администратором
-        // В будущем можно заменить на проверку прав владельца ресурса
         if (!$userId || !$this->groupService->isAdmin($userId)) { // Используем GroupService для проверки
             http_response_code(403); // Forbidden
             $response->setData(['error' => 'Доступ запрещен']);

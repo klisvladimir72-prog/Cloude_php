@@ -22,7 +22,7 @@ class AuthController
     {
         $data = $request->getData();
         // Получаем email или login из запроса
-        $emailOrLogin = $data['email_or_login'] ?? ''; // Изменили имя поля
+        $emailOrLogin = $data['email_or_login'] ?? '';
         $password = $data['password'] ?? '';
 
         $authService = App::getService('auth_service');
@@ -30,8 +30,6 @@ class AuthController
         $user = $authService->authenticate($emailOrLogin, $password);
 
         if ($user) {
-            // session_start() уже вызывается внутри authenticate
-            // $_SESSION['user_id'], $_SESSION['email'], $_SESSION['login'] уже установлены
             $response->setData(['success' => true, 'redirect' => '/']);
         } else {
             http_response_code(401);
@@ -44,10 +42,10 @@ class AuthController
     {
         $data = $request->getData();
         $email = trim($data['email'] ?? '');
-        $login = trim($data['login'] ?? ''); // Добавляем получение login
+        $login = trim($data['login'] ?? '');
         $password = $data['password'] ?? '';
 
-        if (empty($email) || empty($password) || empty($login)) { // Проверяем login
+        if (empty($email) || empty($password) || empty($login)) {
             http_response_code(400);
             $response->setData(['success' => false, 'message' => 'Email, Login и пароль обязательны']);
             $response->sendJson();

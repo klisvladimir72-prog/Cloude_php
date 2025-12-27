@@ -9,13 +9,9 @@ class UserGroupRepository extends BaseRepository
 {
     protected string $table = 'user_groups';
 
-    public function findByName(string $name): ?array
-    {
-        return $this->db->findOneBy($this->table, ['name' => $name]);
-    }
 
-    public function findAllGroups(): array{
+    public function findAllGroups(): array
+    {
         return parent::findAll($this->table);
     }
 }
-

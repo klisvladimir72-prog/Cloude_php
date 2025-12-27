@@ -6,16 +6,6 @@ class UserRepository extends BaseRepository
 {
     protected string $table = 'users';
 
-    public function findByEmail(string $email)
-    {
-        return $this->db->findOneBy($this->table, ['email' => $email]);
-    }
-
-    public function findById(int $id)
-    {
-        return $this->db->findOneBy($this->table, ['id' => $id]);
-    }
-
     // --- Метод для проверки уникальности email и login (для регистрации) ---
     /**
      * Проверяет, существует ли пользователь с указанным email или login.

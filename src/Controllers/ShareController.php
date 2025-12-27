@@ -328,5 +328,4 @@ class ShareController
             'usersInGroups' => $usersInGroups,
         ]);
     }
-    // ---
 }

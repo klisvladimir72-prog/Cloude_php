@@ -16,7 +16,6 @@ class FileRepository extends BaseRepository
     {
         $key = $this->table . '_' . md5(serialize($criteria));
         if (isset(self::$cache[$key])) {
-            error_log("Cache hit for key: $key");
             return self::$cache[$key];
         }
 

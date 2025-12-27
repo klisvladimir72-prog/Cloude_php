@@ -25,14 +25,11 @@ App::bind('file_service', fn() => new FileService());
 App::bind('folder_service', fn() => new FolderService());
 App::bind('shared_file_repository', fn() => new \Src\Repositories\SharedFileRepository());
 App::bind('shared_folder_repository', fn() => new \Src\Repositories\SharedFolderRepository());
-
-// --- Новые сервисы и репозитории для групп и шаринга по группам ---
 App::bind('user_group_repository', fn() => new \Src\Repositories\UserGroupRepository());
 App::bind('user_group_member_repository', fn() => new \Src\Repositories\UserGroupMemberRepository());
 App::bind('shared_resource_by_group_repository', fn() => new \Src\Repositories\SharedResourceByGroupRepository());
 App::bind('group_service', fn() => new \Src\Services\GroupService());
 App::bind('share_by_group_service', fn() => new \Src\Services\ShareByGroupService());
-// ---
 
 $request = new Request();
 $router = new Router();
@@ -149,7 +146,7 @@ $router->add('GET', 'get-shared-users/file/{fileId}', function (Request $request
     $userIds = [];
     foreach ($sharedFiles as $sharedFile) {
         $userRepo = App::getService('user_repository');
-        $user = $userRepo->findByEmail($sharedFile['shared_with_email']);
+        $user = $userRepo->findBy($userRepo->getTable(), ['email' => $sharedFile['shared_with_email']]);
         if ($user) {
             $userIds[] = $user['id'];
         }
@@ -184,7 +181,7 @@ $router->add('GET', 'get-shared-users/folder/{folderId}', function (Request $req
     $userIds = [];
     foreach ($sharedFolders as $sharedFolder) {
         $userRepo = App::getService('user_repository');
-        $user = $userRepo->findByEmail($sharedFolder['shared_with_email']);
+        $user = $userRepo->findBy($userRepo->getTable(), ['email' => $sharedFolder['shared_with_email']]);
         if ($user) {
             $userIds[] = $user['id'];
         }
@@ -195,19 +192,13 @@ $router->add('GET', 'get-shared-users/folder/{folderId}', function (Request $req
 });
 // ---
 
-// --- Новые маршруты для управления группами и шарингом по группам ---
 // Маршрут для отображения админ-панели теперь в ShareController
 $router->add('GET', 'admin/groups', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\ShareController();
     $controller->showAdminPanel($request, $response);
 });
 
-// Маршруты для CRUD операций с группами (эти вызовы останутся такими же, как в предыдущем примере)
-// Но теперь они будут вызывать методы в GroupController.php
-// Нам нужно создать этот файл или реализовать логику в ShareController.php
-// Для простоты, давай создадим GroupController.php и перенесем туда логику
-
-// Маршруты для CRUD групп (предполагаем, что GroupController существует)
+// Маршруты для CRUD групп 
 $router->add('POST', 'create-group', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\GroupController();
     $controller->createGroup($request, $response);

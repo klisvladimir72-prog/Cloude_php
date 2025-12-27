@@ -26,6 +26,11 @@ abstract class BaseRepository
         return $this->db;
     }
 
+    public function getTable(): string
+    {
+        return $this->table;
+    }
+
     public function create(array $data): bool
     {
         try {
@@ -102,9 +107,6 @@ abstract class BaseRepository
 
             $whereClause = implode(' AND ', $conditions);
             $sql = "SELECT * FROM $table WHERE $whereClause";
-
-            error_log("SQL: " . $sql);
-            error_log("Params: " . print_r($params, true));
 
             $stmt = $this->db->getConnection()->prepare($sql);
 

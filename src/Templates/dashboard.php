@@ -1,6 +1,8 @@
 <?php ob_start(); ?>
 <div class="container">
     <h1>Мои файлы и папки</h1>
+    <!-- Отображение логина авторизованного пользователя -->
+    <p>Вы вошли как: <strong><?php echo htmlspecialchars($_SESSION['login'] ?? 'Гость'); ?></strong></p>
 
     <!-- Хлебные крошки -->
     <div class="breadcrumbs">

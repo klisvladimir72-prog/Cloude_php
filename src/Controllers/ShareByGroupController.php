@@ -5,6 +5,8 @@ namespace Src\Controllers;
 use Src\Core\Request;
 use Src\Core\Response;
 use Src\Core\App;
+use Src\Middleware\AuthMiddleware;
+
 
 /**
  * Контроллер для обработки запросов на шаринг файлов/папок по группам.
@@ -26,8 +28,16 @@ class ShareByGroupController
      */
     public function shareResource(Request $request, Response $response)
     {
-        session_start();
-        $userId = $_SESSION['user_id'] ?? null;
+        $authResult = AuthMiddleware::handle($request, $response);
+        if (!$authResult) {
+            http_response_code(401);
+            $response->sendHtml('login.php');
+            return;
+        }
+
+        // Получаем объект пользователя
+        $user = $authResult['user'];
+        $userId = $user->id;
 
         // Проверяем, является ли текущий пользователь администратором
         if (!$userId || !$this->groupService->isAdmin($userId)) { // Используем GroupService для проверки

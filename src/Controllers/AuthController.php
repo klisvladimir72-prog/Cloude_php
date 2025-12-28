@@ -5,6 +5,7 @@ namespace Src\Controllers;
 use Src\Core\Request;
 use Src\Core\Response;
 use Src\Core\App;
+use Src\Services\AuthService;
 
 class AuthController
 {
@@ -20,21 +21,44 @@ class AuthController
 
     public function login(Request $request, Response $response)
     {
-        $data = $request->getData();
-        // Получаем email или login из запроса
-        $emailOrLogin = $data['email_or_login'] ?? '';
-        $password = $data['password'] ?? '';
-
         $authService = App::getService('auth_service');
-        // Аутентифицируем пользователя
+        $data = $request->getData();
+
+
+        // Токена нет значит логинимся по login or email
+        $emailOrLogin = $data['email_or_login'] ?? '';
+        $password = $data['password'];
+
         $user = $authService->authenticate($emailOrLogin, $password);
 
         if ($user) {
-            $response->setData(['success' => true, 'redirect' => '/']);
+            // Успешная аутентификация 
+            $newToken = $authService->generateTokenForUser($user->id);
+            $this->setTokenCookie($newToken);
+
+            if ($newToken) {
+                $response->setData([
+                    'success' => true,
+                    "id" => $user->id,
+                    'redirect' => '/'
+
+                ]);
+            } else {
+                http_response_code(500);
+                $response->setData([
+                    'success' => false,
+                    'message' => 'Ошибка при создании токена'
+                ]);
+            }
         } else {
             http_response_code(401);
-            $response->setData(['success' => false, 'message' => 'Неверный логин или пароль']);
+            $response->setData([
+                'success' => false,
+                'message' => 'Неверный логин или пароль.'
+            ]);
         }
+
+
         $response->sendJson();
     }
 
@@ -53,18 +77,12 @@ class AuthController
         }
 
         $authService = App::getService('auth_service');
-        $success = $authService->register($email, $password, $login); // Передаем login
+        $success = $authService->register($email, $password, $login);
 
         if ($success) {
-            // После успешной регистрации — сразу логиним пользователя
-            $user = $authService->authenticate($email, $password); // Можно использовать email или login
-            if ($user) {
-                // session_start() и установка $_SESSION уже внутри authenticate
-                $response->setData(['success' => true, 'message' => 'Пользователь зарегистрирован', 'redirect' => '/']);
-            } else {
-                http_response_code(500);
-                $response->setData(['success' => false, 'message' => 'Ошибка авторизации после регистрации']);
-            }
+            // После успешной регистрации — не логиним пользователя и не возвращаем токен
+            // Логин происходит отдельно через /login
+            $response->setData(['success' => true, 'message' => 'Пользователь зарегистрирован. Пожалуйста, войдите.', 'redirect' => '/login']);
         } else {
             http_response_code(400);
             $response->setData(['success' => false, 'message' => 'Пользователь с таким email или login уже существует']);
@@ -72,11 +90,48 @@ class AuthController
         $response->sendJson();
     }
 
+
     public function logout(Request $request, Response $response)
     {
-        session_start();
-        session_destroy();
+        // Извлекаем токен из Cookie 
+        $token = $_COOKIE['auth_token'] ?? null;
+
+        if ($token) {
+            $authService = App::getService('auth_service');
+
+            $user = $authService->getUserByToken($token);
+            if ($user) {
+                $authService->removeTokenForUser($user->id);
+            }
+        }
+
+        $this->unsetTokenCookie();
+
         header('Location: /');
         exit();
+    }
+
+    private function setTokenCookie(string $token): void
+    {
+        // Устанавливаем HTTP-only cookie
+        // Срок действия такой же как и бд 
+        setcookie('auth_token', $token, [
+            'expires' => time() + (1 * 24 * 60 * 60), //1 день
+            'path' => '/',
+            'secure' => true, // при использовании HTTPS
+            'httponly' => true,
+            'samesite' => 'Strict'
+        ]);
+    }
+
+    private function unsetTokenCookie(): void
+    {
+        setcookie('auth_token', '', [
+            'expires' => time() - 3600, // Устанавливаем в прошлое 
+            'path' => '/',
+            'secure' => true, // при использовании HTTPS
+            'httponly' => true,
+            'samesite' => 'Strict'
+        ]);
     }
 }

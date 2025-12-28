@@ -5,19 +5,23 @@ namespace Src\Controllers;
 use Src\Core\Request;
 use Src\Core\Response;
 use Src\Core\App;
+use Src\Middleware\AuthMiddleware;
 
 class ShareController
 {
     public function shareFile(Request $request, Response $response)
     {
         try {
-            session_start();
-            if (!isset($_SESSION['user_id'])) {
+            $authResult = AuthMiddleware::handle($request, $response);
+            if (!$authResult) {
                 http_response_code(401);
-                $response->setData(['error' => 'Требуется аутентификация']);
-                $response->sendJson();
+                $response->sendHtml('login.php');
                 return;
             }
+
+            // Получаем объект пользователя
+            $user = $authResult['user'];
+            $userId = $user->id;
 
             $data = $request->getData();
             $fileId = $data['file_id'] ?? null;
@@ -39,7 +43,7 @@ class ShareController
             $file = $fileRepo->find('files', $fileId);
 
             // Проверяем, является ли пользователь владельцем файла
-            if (!$file || $file['user_id'] !== $_SESSION['user_id']) {
+            if (!$file || $file['user_id'] !== $userId) {
                 http_response_code(403);
                 $response->setData(['success' => false, 'message' => 'Нет прав на файл']);
                 $response->sendJson();
@@ -66,7 +70,7 @@ class ShareController
                     if (empty($existingShare)) {
                         $sharedFileRepo->create([
                             'file_id' => $fileId,
-                            'shared_by' => $_SESSION['user_id'],
+                            'shared_by' => $userId,
                             'shared_with_email' => $sharedWithEmail
                         ]);
                         $successCount++;
@@ -90,7 +94,7 @@ class ShareController
 
                     // Вызываем метод для шаринга файла с группой
                     // Этот метод уже проверяет транзакции и т.д.
-                    $wasShared = $shareByGroupService->shareFile($fileId, $groupId, $permissions, $_SESSION['user_id']);
+                    $wasShared = $shareByGroupService->shareFile($fileId, $groupId, $permissions, $userId);
                     if ($wasShared) {
                         $successCount++; // Считаем как успешный шаринг, хотя это может быть обновление
                     }
@@ -124,13 +128,16 @@ class ShareController
     public function shareFolder(Request $request, Response $response)
     {
         try {
-            session_start();
-            if (!isset($_SESSION['user_id'])) {
+            $authResult = AuthMiddleware::handle($request, $response);
+            if (!$authResult) {
                 http_response_code(401);
-                $response->setData(['error' => 'Требуется аутентификация']);
-                $response->sendJson();
+                $response->sendHtml('login.php');
                 return;
             }
+
+            // Получаем объект пользователя
+            $user = $authResult['user'];
+            $userId = $user->id;
 
             $data = $request->getData();
             $folderId = $data['folder_id'] ?? null;
@@ -150,7 +157,7 @@ class ShareController
 
             $folder = $folderRepo->find($folderRepo->getTable(), $folderId);
 
-            if (!$folder || $folder['user_id'] !== $_SESSION['user_id']) {
+            if (!$folder || $folder['user_id'] !== $userId) {
                 http_response_code(403);
                 $response->setData(['success' => false, 'message' => 'Нет прав на папку']);
                 $response->sendJson();
@@ -177,7 +184,7 @@ class ShareController
                     if (empty($existingShare)) {
                         $sharedFolderRepo->create([
                             'folder_id' => $folderId,
-                            'shared_by' => $_SESSION['user_id'],
+                            'shared_by' => $userId,
                             'shared_with_email' => $sharedWithEmail
                         ]);
                         $successCount++;
@@ -199,7 +206,7 @@ class ShareController
                     }
 
                     // Вызываем метод для рекурсивного шаринга папки с группой
-                    $wasShared = $shareByGroupService->shareFolderRecursively($folderId, $groupId, $permissions, $_SESSION['user_id']);
+                    $wasShared = $shareByGroupService->shareFolderRecursively($folderId, $groupId, $permissions, $userId);
                     if ($wasShared) {
                         $successCount++; // Считаем как успешный шаринг, хотя это может быть обновление
                     }
@@ -233,13 +240,16 @@ class ShareController
     public function getUsers(Request $request, Response $response)
     {
         try {
-            session_start();
-            if (!isset($_SESSION['user_id'])) {
+            $authResult = AuthMiddleware::handle($request, $response);
+            if (!$authResult) {
                 http_response_code(401);
-                $response->setData(['error' => 'Требуется аутентификация']);
-                $response->sendJson();
+                $response->sendHtml('login.php');
                 return;
             }
+
+            // Получаем объект пользователя
+            $user = $authResult['user'];
+            $userId = $user->id;
 
             $userRepo = App::getService('user_repository');
 
@@ -247,7 +257,7 @@ class ShareController
             if (!is_array($users)) {
                 $users = [];
             }
-            $filteredUsers = array_filter($users, fn($user) => $user['id'] !== $_SESSION['user_id']);
+            $filteredUsers = array_filter($users, fn($user) => $user['id'] !== $userId);
             $filteredUsers = array_values($filteredUsers);
 
             $response->setData(['users' => $filteredUsers]);
@@ -268,17 +278,11 @@ class ShareController
     public function getGroups(Request $request, Response $response)
     {
         try {
-            session_start();
-            if (!isset($_SESSION['user_id'])) {
+            if (!AuthMiddleware::handle($request, $response)) {
                 http_response_code(401);
-                $response->setData(['error' => 'Требуется аутентификация']);
-                $response->sendJson();
+                $response->sendHtml('login.php');
                 return;
             }
-
-            // Важно: В отличие от админ-панели, здесь мы НЕ проверяем, является ли пользователь админом.
-            // Любой авторизованный пользователь может видеть список групп.
-            // Это позволяет ему поделиться с группой.
 
             $groupService = App::getService('group_service');
             $groups = $groupService->getAllGroups(); // Возвращает все группы
@@ -301,8 +305,18 @@ class ShareController
     // --- Метод для отображения админ-панели групп ---
     public function showAdminPanel(Request $request, Response $response)
     {
-        session_start();
-        $userId = $_SESSION['user_id'] ?? null;
+
+        // Проверяем токен через AuthMiddleware
+        $authResult = AuthMiddleware::handle($request, $response);
+        if (!$authResult) {
+            http_response_code(401);
+            $response->sendHtml('login.php');
+            return;
+        }
+
+        // Получаем объект пользователя
+        $user = $authResult['user'];
+        $userId = $user->id;
 
         $userRepo = App::getService('user_repository');
         $currentUser = $userRepo->find('users', $userId);
@@ -326,6 +340,7 @@ class ShareController
             'groups' => $groups,
             'allUsers' => $allUsers,
             'usersInGroups' => $usersInGroups,
+            'login' => $user->login,
         ]);
     }
 }

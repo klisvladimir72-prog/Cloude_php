@@ -96,6 +96,18 @@ CREATE TABLE IF NOT EXISTS shared_resources_by_group (
     INDEX idx_shared_by (shared_by_user_id)
 );
 
+--Таблица для токенов 
+CREATE TABLE IF NOT EXISTS user_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token VARCHAR(64) NOT NULL UNIQUE, -- Токен должен быть уникальным
+    expires_at DATETIME NOT NULL, -- Срок действия токена
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE, -- Если пользователь удален, удаляются и его токены
+    INDEX idx_token (token), -- Индекс для быстрого поиска по токену
+    INDEX idx_expires (expires_at) -- Индекс для очистки просроченных токенов
+);
+
 -- --- ИНДЕКСЫ ДЛЯ ОПТИМИЗАЦИИ ЗАПРОСОВ ---
 CREATE INDEX idx_files_user_folder ON files(user_id, folder_id);
 CREATE INDEX idx_folders_user_parent ON folders(user_id, parent_id);

@@ -5,7 +5,9 @@ namespace Src\Controllers;
 use Src\Core\Request;
 use Src\Core\Response;
 use Src\Core\App;
+use Src\Middleware\AuthMiddleware;
 use Src\Services\GroupService;
+
 
 /**
  * Контроллер для обработки запросов, связанных с управлением группами.
@@ -25,13 +27,20 @@ class GroupController
      */
     public function showAdminPanel(Request $request, Response $response)
     {
-        session_start();
-        $userLogin = $_SESSION['login'];
-        $userId = $_SESSION['user_id'] ?? null;
+        $authResult = AuthMiddleware::handle($request, $response);
+        if (!$authResult) {
+            http_response_code(401);
+            $response->sendHtml('login.php');
+            return;
+        }
+
+        // Получаем объект пользователя
+        $user = $authResult['user'];
+        $userLogin = $user->login;
 
         $usersRepo = App::getService('user_repository');
 
-        if (!$userId || !$this->groupService->isAdmin($userLogin)) {
+        if (!$this->groupService->isAdmin($userLogin)) {
             http_response_code(403);
             $response->sendHtml('error.php', ['message' => 'Доступ запрещен']);
             return;
@@ -58,8 +67,16 @@ class GroupController
      */
     public function createGroup(Request $request, Response $response)
     {
-        session_start();
-        $userLogin = $_SESSION['login'] ?? null;
+        $authResult = AuthMiddleware::handle($request, $response);
+        if (!$authResult) {
+            http_response_code(401);
+            $response->sendHtml('login.php');
+            return;
+        }
+
+        // Получаем объект пользователя
+        $user = $authResult['user'];
+        $userLogin = $user->login;
 
         if (!$userLogin || !$this->groupService->isAdmin($userLogin)) {
             http_response_code(403);
@@ -92,11 +109,18 @@ class GroupController
      */
     public function updateGroup(Request $request, Response $response)
     {
-        session_start();
-        $userLogin = $_SESSION['login'];
-        $userId = $_SESSION['user_id'] ?? null;
+        $authResult = AuthMiddleware::handle($request, $response);
+        if (!$authResult) {
+            http_response_code(401);
+            $response->sendHtml('login.php');
+            return;
+        }
 
-        if (!$userId || !$this->groupService->isAdmin($userLogin)) {
+        // Получаем объект пользователя
+        $user = $authResult['user'];
+        $userLogin = $user->login;
+
+        if (!$userLogin || !$this->groupService->isAdmin($userLogin)) {
             http_response_code(403);
             $response->setData(['error' => 'Доступ запрещен']);
             $response->sendJson();
@@ -128,11 +152,18 @@ class GroupController
      */
     public function deleteGroup(Request $request, Response $response)
     {
-        session_start();
-        $userLogin = $_SESSION['login'];
-        $userId = $_SESSION['user_id'] ?? null;
+        $authResult = AuthMiddleware::handle($request, $response);
+        if (!$authResult) {
+            http_response_code(401);
+            $response->sendHtml('login.php');
+            return;
+        }
 
-        if (!$userId || !$this->groupService->isAdmin($userLogin)) {
+        // Получаем объект пользователя
+        $user = $authResult['user'];
+        $userLogin = $user->login;
+
+        if (!$userLogin || !$this->groupService->isAdmin($userLogin)) {
             http_response_code(403);
             $response->setData(['error' => 'Доступ запрещен']);
             $response->sendJson();
@@ -163,11 +194,18 @@ class GroupController
      */
     public function addUserToGroup(Request $request, Response $response)
     {
-        session_start();
-        $userLogin = $_SESSION['login'];
-        $userId = $_SESSION['user_id'] ?? null;
+        $authResult = AuthMiddleware::handle($request, $response);
+        if (!$authResult) {
+            http_response_code(401);
+            $response->sendHtml('login.php');
+            return;
+        }
 
-        if (!$userId || !$this->groupService->isAdmin($userLogin)) {
+        // Получаем объект пользователя
+        $user = $authResult['user'];
+        $userLogin = $user->login;
+
+        if (!$this->groupService->isAdmin($userLogin)) {
             http_response_code(403);
             $response->setData(['error' => 'Доступ запрещен']);
             $response->sendJson();
@@ -199,11 +237,18 @@ class GroupController
      */
     public function removeUserFromGroup(Request $request, Response $response)
     {
-        session_start();
-        $userLogin = $_SESSION['login'];
-        $userId = $_SESSION['user_id'] ?? null;
+        $authResult = AuthMiddleware::handle($request, $response);
+        if (!$authResult) {
+            http_response_code(401);
+            $response->sendHtml('login.php');
+            return;
+        }
 
-        if (!$userId || !$this->groupService->isAdmin($userLogin)) {
+        // Получаем объект пользователя
+        $user = $authResult['user'];
+        $userLogin = $user->login;
+
+        if (!$userLogin || !$this->groupService->isAdmin($userLogin)) {
             http_response_code(403);
             $response->setData(['error' => 'Доступ запрещен']);
             $response->sendJson();

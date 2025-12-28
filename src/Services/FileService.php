@@ -91,90 +91,90 @@ class FileService
         }
     }
 
-    public function prepareDownload(string $fileName, int $userId): ?array
-    {
-        try {
-            $repo = App::getService('file_repository');
-            $sharedFolderRepo = App::getService('shared_folder_repository');
-            $shareByGroupService = App::getService('share_by_group_service'); // <-- Новый сервис
+    // public function prepareDownload(string $fileName, int $userId): ?array
+    // {
+    //     try {
+    //         $repo = App::getService('file_repository');
+    //         $sharedFolderRepo = App::getService('shared_folder_repository');
+    //         $shareByGroupService = App::getService('share_by_group_service'); // <-- Новый сервис
 
-            // Находим файл по имени
-            $files = $repo->findBy('files', ['filename' => $fileName]);
-            $fileRecord = !empty($files) ? $files[0] : null;
+    //         // Находим файл по имени
+    //         $files = $repo->findBy('files', ['filename' => $fileName]);
+    //         $fileRecord = !empty($files) ? $files[0] : null;
 
-            if (!$fileRecord) {
-                return null; // Файл не найден
-            }
+    //         if (!$fileRecord) {
+    //             return null; // Файл не найден
+    //         }
 
-            // Проверяем, является ли текущий пользователь владельцем файла
-            if ($fileRecord['user_id'] === $userId) {
-                // Владелец - имеет право
-                $uploadDir = __DIR__ . '/../../uploads/';
-                $filePath = $uploadDir . $fileRecord['filename'];
-                if (!file_exists($filePath)) {
-                    return null; // Файл физически не существует
-                }
-                return [
-                    'file_record' => $fileRecord,
-                    'file_path' => $filePath
-                ];
-            }
+    //         // Проверяем, является ли текущий пользователь владельцем файла
+    //         if ($fileRecord['user_id'] === $userId) {
+    //             // Владелец - имеет право
+    //             $uploadDir = __DIR__ . '/../../uploads/';
+    //             $filePath = $uploadDir . $fileRecord['filename'];
+    //             if (!file_exists($filePath)) {
+    //                 return null; // Файл физически не существует
+    //             }
+    //             return [
+    //                 'file_record' => $fileRecord,
+    //                 'file_path' => $filePath
+    //             ];
+    //         }
 
-            // Проверяем, есть ли доступ к файлу через группы
-            if ($shareByGroupService->hasAccessByGroup($userId, 'file', $fileRecord['id'])) {
-                // Доступ через группу - имеет право
-                $uploadDir = __DIR__ . '/../../uploads/';
-                $filePath = $uploadDir . $fileRecord['filename'];
-                if (!file_exists($filePath)) {
-                    return null; // Файл физически не существует
-                }
-                return [
-                    'file_record' => $fileRecord,
-                    'file_path' => $filePath
-                ];
-            }
+    //         // Проверяем, есть ли доступ к файлу через группы
+    //         if ($shareByGroupService->hasAccessByGroup($userId, 'file', $fileRecord['id'])) {
+    //             // Доступ через группу - имеет право
+    //             $uploadDir = __DIR__ . '/../../uploads/';
+    //             $filePath = $uploadDir . $fileRecord['filename'];
+    //             if (!file_exists($filePath)) {
+    //                 return null; // Файл физически не существует
+    //             }
+    //             return [
+    //                 'file_record' => $fileRecord,
+    //                 'file_path' => $filePath
+    //             ];
+    //         }
 
-            // Получаем folder_id файла
-            $folderId = $fileRecord['folder_id'];
+    //         // Получаем folder_id файла
+    //         $folderId = $fileRecord['folder_id'];
 
-            // Если файл не в папке (корень), проверяем, был ли он расшарен отдельно (email)
-            if ($folderId === null) {
-                $sharedFiles = $sharedFolderRepo->getByFileIdAndEmail($fileRecord['id'], $_SESSION['email']);
-                if (!empty($sharedFiles)) {
-                    $uploadDir = __DIR__ . '/../../uploads/';
-                    $filePath = $uploadDir . $fileRecord['filename'];
-                    if (!file_exists($filePath)) {
-                        return null;
-                    }
-                    return [
-                        'file_record' => $fileRecord,
-                        'file_path' => $filePath
-                    ];
-                }
-                return null; // Ни владелец, ни через группу, ни расшарен (email) - нет прав
-            }
+    //         // Если файл не в папке (корень), проверяем, был ли он расшарен отдельно (email)
+    //         if ($folderId === null) {
+    //             $sharedFiles = $sharedFolderRepo->getByFileIdAndEmail($fileRecord['id'], $_SESSION['email']);
+    //             if (!empty($sharedFiles)) {
+    //                 $uploadDir = __DIR__ . '/../../uploads/';
+    //                 $filePath = $uploadDir . $fileRecord['filename'];
+    //                 if (!file_exists($filePath)) {
+    //                     return null;
+    //                 }
+    //                 return [
+    //                     'file_record' => $fileRecord,
+    //                     'file_path' => $filePath
+    //                 ];
+    //             }
+    //             return null; // Ни владелец, ни через группу, ни расшарен (email) - нет прав
+    //         }
 
-            // Файл находится в папке. Проверяем, была ли эта папка (или любая из её родительских) расшарена текущему пользователю (email)
-            if ($this->isFolderSharedToUser($folderId, $_SESSION['email'], $sharedFolderRepo, $repo)) {
-                // Файл находится в расшаренной папке (email) - имеет право на скачивание
-                $uploadDir = __DIR__ . '/../../uploads/';
-                $filePath = $uploadDir . $fileRecord['filename'];
-                if (!file_exists($filePath)) {
-                    return null; // Файл физически не существует
-                }
-                return [
-                    'file_record' => $fileRecord,
-                    'file_path' => $filePath
-                ];
-            }
+    //         // Файл находится в папке. Проверяем, была ли эта папка (или любая из её родительских) расшарена текущему пользователю (email)
+    //         if ($this->isFolderSharedToUser($folderId, $_SESSION['email'], $sharedFolderRepo, $repo)) {
+    //             // Файл находится в расшаренной папке (email) - имеет право на скачивание
+    //             $uploadDir = __DIR__ . '/../../uploads/';
+    //             $filePath = $uploadDir . $fileRecord['filename'];
+    //             if (!file_exists($filePath)) {
+    //                 return null; // Файл физически не существует
+    //             }
+    //             return [
+    //                 'file_record' => $fileRecord,
+    //                 'file_path' => $filePath
+    //             ];
+    //         }
 
-            // Ни владелец, ни в расшаренной папке (email), ни через группу - нет прав
-            return null;
-        } catch (\Throwable $e) {
-            error_log("FileService::prepareDownload error: " . $e->getMessage());
-            return null;
-        }
-    }
+    //         // Ни владелец, ни в расшаренной папке (email), ни через группу - нет прав
+    //         return null;
+    //     } catch (\Throwable $e) {
+    //         error_log("FileService::prepareDownload error: " . $e->getMessage());
+    //         return null;
+    //     }
+    // }
 
     // Вспомогательный метод для проверки, была ли папка (или её родительская) расшарена пользователю (email)
     private function isFolderSharedToUser(int $folderId, string $email, $sharedFolderRepo, $folderRepo): bool

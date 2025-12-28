@@ -30,6 +30,7 @@ App::bind('user_group_member_repository', fn() => new \Src\Repositories\UserGrou
 App::bind('shared_resource_by_group_repository', fn() => new \Src\Repositories\SharedResourceByGroupRepository());
 App::bind('group_service', fn() => new \Src\Services\GroupService());
 App::bind('share_by_group_service', fn() => new \Src\Services\ShareByGroupService());
+App::bind('user_token_repository', fn() => new \Src\Repositories\UserTokenRepository());
 
 $request = new Request();
 $router = new Router();

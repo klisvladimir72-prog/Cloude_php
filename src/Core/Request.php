@@ -44,4 +44,35 @@ class Request
     {
         return $this->method;
     }
+
+    /**
+     * Получает все HTTP-заголовки запроса.
+     * @return array Ассоциативный массив заголовков.
+     */
+    public function getHeaders(): array
+    {
+        $headers = [];
+        foreach ($_SERVER as $key => $value) {
+            if (strpos($key, 'HTTP_') === 0) {
+                $header = str_replace('_', '-', substr($key, 5));
+                $header = strtolower($header);
+                $header = ucwords($header, '-');
+                $headers[$header] = $value;
+            }
+        }
+
+        // Некоторые серверы могут передавать заголовки Authorization через переменную $_SERVER
+        if (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $headers['Authorization'] = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        } elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $headers['Authorization'] = $_SERVER['HTTP_AUTHORIZATION'];
+        } elseif (function_exists('apache_request_headers')) {
+            $apacheHeaders = apache_request_headers();
+            if (isset($apacheHeaders['Authorization'])) {
+                $headers['Authorization'] = $apacheHeaders['Authorization'];
+            }
+        }
+
+        return $headers;
+    }
 }

@@ -1,0 +1,201 @@
+[27-Dec-2025 14:32:55 Etc/GMT-3] PHP Fatal error:  Uncaught Exception: Сервис 'user_token_repository' не зарегистрирован. in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\App.php:17
+Stack trace:
+#0 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Services\AuthService.php(15): Src\Core\App::getService('user_token_repo...')
+#1 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(23): Src\Services\AuthService->__construct()
+#2 [internal function]: {closure}()
+#3 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\App.php(19): call_user_func(Object(Closure))
+#4 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\AuthController.php(28): Src\Core\App::getService('auth_service')
+#5 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(85): Src\Controllers\AuthController->login(Object(Src\Core\Request), Object(Src\Core\Response))
+#6 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\Router.php(58): {closure}(Object(Src\Core\Request), Object(Src\Core\Response))
+#7 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(258): Src\Core\Router->processRequest(Object(Src\Core\Request))
+#8 {main}
+  thrown in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\App.php on line 17
+[27-Dec-2025 14:32:58 Etc/GMT-3] PHP Fatal error:  Uncaught Exception: Сервис 'user_token_repository' не зарегистрирован. in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\App.php:17
+Stack trace:
+#0 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Services\AuthService.php(15): Src\Core\App::getService('user_token_repo...')
+#1 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(23): Src\Services\AuthService->__construct()
+#2 [internal function]: {closure}()
+#3 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\App.php(19): call_user_func(Object(Closure))
+#4 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\AuthController.php(28): Src\Core\App::getService('auth_service')
+#5 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(85): Src\Controllers\AuthController->login(Object(Src\Core\Request), Object(Src\Core\Response))
+#6 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\Router.php(58): {closure}(Object(Src\Core\Request), Object(Src\Core\Response))
+#7 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(258): Src\Core\Router->processRequest(Object(Src\Core\Request))
+#8 {main}
+  thrown in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\App.php on line 17
+[27-Dec-2025 14:33:29 Etc/GMT-3] PHP Fatal error:  Uncaught Exception: Сервис 'user_token_repository' не зарегистрирован. in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\App.php:17
+Stack trace:
+#0 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Services\AuthService.php(15): Src\Core\App::getService('user_token_repo...')
+#1 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(23): Src\Services\AuthService->__construct()
+#2 [internal function]: {closure}()
+#3 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\App.php(19): call_user_func(Object(Closure))
+#4 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\AuthController.php(63): Src\Core\App::getService('auth_service')
+#5 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(90): Src\Controllers\AuthController->register(Object(Src\Core\Request), Object(Src\Core\Response))
+#6 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\Router.php(58): {closure}(Object(Src\Core\Request), Object(Src\Core\Response))
+#7 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(258): Src\Core\Router->processRequest(Object(Src\Core\Request))
+#8 {main}
+  thrown in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\App.php on line 17
+[28-Dec-2025 14:26:02 Etc/GMT-3] PHP Warning:  Undefined global variable $_SESSION in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\FileController.php on line 96
+[28-Dec-2025 14:26:02 Etc/GMT-3] PHP Warning:  Trying to access array offset on null in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\FileController.php on line 96
+[28-Dec-2025 14:26:02 Etc/GMT-3] PHP Warning:  Undefined global variable $_SESSION in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\FileController.php on line 187
+[28-Dec-2025 14:26:02 Etc/GMT-3] PHP Warning:  Trying to access array offset on null in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\FileController.php on line 187
+[28-Dec-2025 14:26:02 Etc/GMT-3] PHP Warning:  Undefined global variable $_SESSION in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\FileController.php on line 336
+[28-Dec-2025 14:26:02 Etc/GMT-3] PHP Warning:  Trying to access array offset on null in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\FileController.php on line 336
+[28-Dec-2025 14:26:02 Etc/GMT-3] PHP Fatal error:  Uncaught TypeError: Src\Controllers\FileController::getBreadcrumbs(): Argument #6 ($userEmail) must be of type string, null given, called in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\FileController.php on line 336 and defined in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\FileController.php:371
+Stack trace:
+#0 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\FileController.php(336): Src\Controllers\FileController->getBreadcrumbs(0, Object(Src\Repositories\FolderRepository), 1, Object(Src\Services\ShareByGroupService), Object(Src\Repositories\SharedFolderRepository), NULL)
+#1 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(41): Src\Controllers\FileController->index(Object(Src\Core\Request), Object(Src\Core\Response))
+#2 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\Router.php(58): {closure}(Object(Src\Core\Request), Object(Src\Core\Response))
+#3 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(259): Src\Core\Router->processRequest(Object(Src\Core\Request))
+#4 {main}
+  thrown in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\FileController.php on line 371
+[28-Dec-2025 22:15:24 Etc/GMT-3] PHP Fatal error:  Uncaught Error: Undefined constant "login" in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\dashboard.php:5
+Stack trace:
+#0 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\Response.php(31): include()
+#1 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\FileController.php(339): Src\Core\Response->sendHtml('dashboard.php', Array)
+#2 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(41): Src\Controllers\FileController->index(Object(Src\Core\Request), Object(Src\Core\Response))
+#3 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\Router.php(58): {closure}(Object(Src\Core\Request), Object(Src\Core\Response))
+#4 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(259): Src\Core\Router->processRequest(Object(Src\Core\Request))
+#5 {main}
+  thrown in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\dashboard.php on line 5
+[28-Dec-2025 22:17:00 Etc/GMT-3] PHP Fatal error:  Uncaught Error: Undefined constant "login" in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\dashboard.php:5
+Stack trace:
+#0 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\Response.php(31): include()
+#1 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\FileController.php(339): Src\Core\Response->sendHtml('dashboard.php', Array)
+#2 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(41): Src\Controllers\FileController->index(Object(Src\Core\Request), Object(Src\Core\Response))
+#3 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\Router.php(58): {closure}(Object(Src\Core\Request), Object(Src\Core\Response))
+#4 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(259): Src\Core\Router->processRequest(Object(Src\Core\Request))
+#5 {main}
+  thrown in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\dashboard.php on line 5
+[28-Dec-2025 22:17:40 Etc/GMT-3] PHP Warning:  Undefined global variable $_SESSION in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\FileController.php on line 63
+[28-Dec-2025 22:17:40 Etc/GMT-3] PHP Warning:  Trying to access array offset on null in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\FileController.php on line 63
+[28-Dec-2025 23:51:24 Etc/GMT-3] PHP Fatal error:  Uncaught TypeError: Src\Repositories\BaseRepository::find(): Argument #2 ($id) must be of type int, null given, called in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\ShareController.php on line 308 and defined in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Repositories\BaseRepository.php:83
+Stack trace:
+#0 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\ShareController.php(308): Src\Repositories\BaseRepository->find('users', NULL)
+#1 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(199): Src\Controllers\ShareController->showAdminPanel(Object(Src\Core\Request), Object(Src\Core\Response))
+#2 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\Router.php(58): {closure}(Object(Src\Core\Request), Object(Src\Core\Response))
+#3 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(259): Src\Core\Router->processRequest(Object(Src\Core\Request))
+#4 {main}
+  thrown in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Repositories\BaseRepository.php on line 83
+[28-Dec-2025 23:51:28 Etc/GMT-3] PHP Fatal error:  Uncaught TypeError: Src\Repositories\BaseRepository::find(): Argument #2 ($id) must be of type int, null given, called in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\ShareController.php on line 308 and defined in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Repositories\BaseRepository.php:83
+Stack trace:
+#0 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\ShareController.php(308): Src\Repositories\BaseRepository->find('users', NULL)
+#1 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(199): Src\Controllers\ShareController->showAdminPanel(Object(Src\Core\Request), Object(Src\Core\Response))
+#2 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\Router.php(58): {closure}(Object(Src\Core\Request), Object(Src\Core\Response))
+#3 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(259): Src\Core\Router->processRequest(Object(Src\Core\Request))
+#4 {main}
+  thrown in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Repositories\BaseRepository.php on line 83
+[28-Dec-2025 23:56:16 Etc/GMT-3] PHP Fatal error:  Uncaught Error: Call to undefined method Src\Services\AuthService::register() in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\AuthController.php:80
+Stack trace:
+#0 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(91): Src\Controllers\AuthController->register(Object(Src\Core\Request), Object(Src\Core\Response))
+#1 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\Router.php(58): {closure}(Object(Src\Core\Request), Object(Src\Core\Response))
+#2 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(259): Src\Core\Router->processRequest(Object(Src\Core\Request))
+#3 {main}
+  thrown in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\AuthController.php on line 80
+[28-Dec-2025 23:56:21 Etc/GMT-3] PHP Fatal error:  Uncaught Error: Call to undefined method Src\Services\AuthService::register() in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\AuthController.php:80
+Stack trace:
+#0 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(91): Src\Controllers\AuthController->register(Object(Src\Core\Request), Object(Src\Core\Response))
+#1 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\Router.php(58): {closure}(Object(Src\Core\Request), Object(Src\Core\Response))
+#2 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(259): Src\Core\Router->processRequest(Object(Src\Core\Request))
+#3 {main}
+  thrown in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\AuthController.php on line 80
+[29-Dec-2025 00:07:23 Etc/GMT-3] PHP Fatal error:  Uncaught Error: Undefined constant "Src\Controllers\FileController" in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\ShareController.php:307
+Stack trace:
+#0 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(199): Src\Controllers\ShareController->showAdminPanel(Object(Src\Core\Request), Object(Src\Core\Response))
+#1 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Core\Router.php(58): {closure}(Object(Src\Core\Request), Object(Src\Core\Response))
+#2 D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\public\index.php(259): Src\Core\Router->processRequest(Object(Src\Core\Request))
+#3 {main}
+  thrown in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\ShareController.php on line 307
+[29-Dec-2025 00:24:13 Etc/GMT-3] PHP Warning:  Undefined array key "login" in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\GroupController.php on line 167
+[29-Dec-2025 00:27:35 Etc/GMT-3] PHP Warning:  Undefined array key "login" in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\GroupController.php on line 167
+[29-Dec-2025 00:28:46 Etc/GMT-3] PHP Warning:  Undefined array key "login" in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\GroupController.php on line 167
+[29-Dec-2025 00:32:33 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:32:33 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:32:33 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:32:33 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:32:33 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:32:33 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:32:33 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:32:33 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:32:33 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:32:33 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:19 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:19 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:19 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:19 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:19 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:19 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:19 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:19 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:19 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:34:19 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:42 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:42 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:42 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:42 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:42 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:42 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:42 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:42 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:42 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:42 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:51 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:51 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:51 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:51 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:51 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:51 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:51 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:51 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:51 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:35:51 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:36:02 Etc/GMT-3] PHP Warning:  Undefined array key "login" in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Controllers\GroupController.php on line 167
+[29-Dec-2025 00:42:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:03 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:07 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:07 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:07 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:07 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:07 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:07 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:07 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:07 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:07 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:07 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:12 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:12 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:12 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:12 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:12 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:12 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:12 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:12 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:12 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:42:12 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:46:43 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:46:43 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:46:43 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:46:43 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:46:43 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:46:43 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:46:43 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:46:43 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:46:43 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269
+[29-Dec-2025 00:46:43 Etc/GMT-3] PHP Warning:  Undefined variable $isInGroup in D:\Programs\3.OSPanel\home\Cloud_storage\Cloud_storage\src\Templates\admin_groups.php on line 269

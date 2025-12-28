@@ -5,18 +5,38 @@ namespace Src\Controllers;
 use Src\Core\Request;
 use Src\Core\Response;
 use Src\Core\App;
+use Src\Models\User;
+use Src\Middleware\AuthMiddleware;
 
 class FileController
 {
+    /**
+     * Проверяет токен в заголовке Authorization и возвращает пользователя.
+     *
+     * @param Request $request
+     * @param Response $response
+     */
+    public function authenticateUser(Request $request, Response $response): ?User
+    {
+        $authResult = AuthMiddleware::handle($request, $response);
+        if (!$authResult) {
+            $response->sendHtml('login.php');
+        };
+        return $authResult['user'];
+    }
+
+
     public function index(Request $request, Response $response)
     {
-        session_start();
-        if (!isset($_SESSION['user_id'])) {
+        // Проверяем токен 
+        $user = $this->authenticateUser($request, $response);
+        if (!$user) {
+            http_response_code(401);
             $response->sendHtml('login.php');
             return;
-        }
+        };
 
-        $userId = (int)$_SESSION['user_id'];
+        $userId = $user->id;
         $folderId = (int)($_GET['folder'] ?? 0); // ID папки, которую просматриваем
 
         $fileRepo = App::getService('file_repository');
@@ -40,7 +60,7 @@ class FileController
             }
 
             $isOwner = $currentFolder['user_id'] === $userId;
-            $isSharedToMeByEmail = !empty($sharedFolderRepo->findBy('shared_folders', ['folder_id' => $folderId, 'shared_with_email' => $_SESSION['email']]));
+            $isSharedToMeByEmail = !empty($sharedFolderRepo->findBy('shared_folders', ['folder_id' => $folderId, 'shared_with_email' => $user->email]));
             $isSharedToMeByGroup = $shareByGroupService->hasAccessByGroup($userId, 'folder', $folderId);
 
             if (!($isOwner || $isSharedToMeByEmail || $isSharedToMeByGroup)) {
@@ -73,7 +93,7 @@ class FileController
 
         // Собираем все расшаренные файлы (по email и по группе)
         $allSharedFiles = [];
-        $sharedFileEntries = $sharedFileRepo->findBy('shared_files', ['shared_with_email' => $_SESSION['email']]);
+        $sharedFileEntries = $sharedFileRepo->findBy('shared_files', ['shared_with_email' => $user->email]);
         $sharedByGroupResources = $shareByGroupService->getResourcesSharedWithUserGroups($userId);
 
         // Процессим файлы, расшаренные по email
@@ -88,7 +108,7 @@ class FileController
                     $parentFolder = $folderRepo->find('folders', $realParentFolderId);
                     if ($parentFolder) {
                         $parentIsOwner = $parentFolder['user_id'] === $userId;
-                        $parentIsSharedToMeByEmail = !empty($sharedFolderRepo->findBy('shared_folders', ['folder_id' => $realParentFolderId, 'shared_with_email' => $_SESSION['email']]));
+                        $parentIsSharedToMeByEmail = !empty($sharedFolderRepo->findBy('shared_folders', ['folder_id' => $realParentFolderId, 'shared_with_email' => $user->email]));
                         $parentIsSharedToMeByGroup = $shareByGroupService->hasAccessByGroup($userId, 'folder', $realParentFolderId);
                         $parentAccessible = $parentIsOwner || $parentIsSharedToMeByEmail || $parentIsSharedToMeByGroup;
                     }
@@ -131,7 +151,7 @@ class FileController
                         $parentFolder = $folderRepo->find('folders', $realParentFolderId);
                         if ($parentFolder) {
                             $parentIsOwner = $parentFolder['user_id'] === $userId;
-                            $parentIsSharedToMeByEmail = !empty($sharedFolderRepo->findBy('shared_folders', ['folder_id' => $realParentFolderId, 'shared_with_email' => $_SESSION['email']]));
+                            $parentIsSharedToMeByEmail = !empty($sharedFolderRepo->findBy('shared_folders', ['folder_id' => $realParentFolderId, 'shared_with_email' => $user->email]));
                             $parentIsSharedToMeByGroup = $shareByGroupService->hasAccessByGroup($userId, 'folder', $realParentFolderId);
                             $parentAccessible = $parentIsOwner || $parentIsSharedToMeByEmail || $parentIsSharedToMeByGroup;
                         }
@@ -164,7 +184,7 @@ class FileController
 
         // Собираем все расшаренные папки (по email и по группе)
         $allSharedFolders = [];
-        $sharedFolderEntries = $sharedFolderRepo->findBy('shared_folders', ['shared_with_email' => $_SESSION['email']]);
+        $sharedFolderEntries = $sharedFolderRepo->findBy('shared_folders', ['shared_with_email' => $user->email]);
 
         // Процессим папки, расшаренные по email
         foreach ($sharedFolderEntries as $entry) {
@@ -178,7 +198,7 @@ class FileController
                     $parentFolder = $folderRepo->find('folders', $realParentFolderId);
                     if ($parentFolder) {
                         $parentIsOwner = $parentFolder['user_id'] === $userId;
-                        $parentIsSharedToMeByEmail = !empty($sharedFolderRepo->findBy('shared_folders', ['folder_id' => $realParentFolderId, 'shared_with_email' => $_SESSION['email']]));
+                        $parentIsSharedToMeByEmail = !empty($sharedFolderRepo->findBy('shared_folders', ['folder_id' => $realParentFolderId, 'shared_with_email' => $user->email]));
                         $parentIsSharedToMeByGroup = $shareByGroupService->hasAccessByGroup($userId, 'folder', $realParentFolderId);
                         $parentAccessible = $parentIsOwner || $parentIsSharedToMeByEmail || $parentIsSharedToMeByGroup;
                     }
@@ -219,7 +239,7 @@ class FileController
                         $parentFolder = $folderRepo->find('folders', $realParentFolderId);
                         if ($parentFolder) {
                             $parentIsOwner = $parentFolder['user_id'] === $userId;
-                            $parentIsSharedToMeByEmail = !empty($sharedFolderRepo->findBy('shared_folders', ['folder_id' => $realParentFolderId, 'shared_with_email' => $_SESSION['email']]));
+                            $parentIsSharedToMeByEmail = !empty($sharedFolderRepo->findBy('shared_folders', ['folder_id' => $realParentFolderId, 'shared_with_email' => $user->email]));
                             $parentIsSharedToMeByGroup = $shareByGroupService->hasAccessByGroup($userId, 'folder', $realParentFolderId);
                             $parentAccessible = $parentIsOwner || $parentIsSharedToMeByEmail || $parentIsSharedToMeByGroup;
                         }
@@ -313,7 +333,7 @@ class FileController
 
 
         // Получаем хлебные крошки (только для папок, принадлежащих пользователю или расшаренных ему как папка)
-        $breadcrumbs = $this->getBreadcrumbs($folderId, $folderRepo, $userId, $shareByGroupService, $sharedFolderRepo, $_SESSION['email']);
+        $breadcrumbs = $this->getBreadcrumbs($folderId, $folderRepo, $userId, $shareByGroupService, $sharedFolderRepo, $user->email);
 
         // Отправляем данные в шаблон
         $response->sendHtml('dashboard.php', [
@@ -321,8 +341,12 @@ class FileController
             'folders' => $allFolders,
             'currentFolder' => $currentFolder ?? null,
             'breadcrumbs' => $breadcrumbs,
+            'login' => $user->login,
+            'id' => $user->id,
         ]);
     }
+
+
 
 
     // Вспомогательный метод для получения email пользователя по ID
@@ -405,18 +429,12 @@ class FileController
     }
 
 
-    // --- Остальные методы остаются без изменений ---
     public function upload(Request $request, Response $response)
     {
-        try {
-            session_start();
-            if (!isset($_SESSION['user_id'])) {
-                http_response_code(401);
-                $response->setData(['error' => 'Требуется аутентификация']);
-                $response->sendJson();
-                return;
-            }
+        $user = $this->authenticateUser($request, $response);
+        if (!$user) return;
 
+        try {
             $data = $request->getData();
             $folderId = $data['folder_id'] ?? null;
 
@@ -425,7 +443,7 @@ class FileController
             }
 
             $service = App::getService('file_service');
-            $result = $service->handleUpload($data, $_FILES, $_SESSION['user_id'], $folderId);
+            $result = $service->handleUpload($data, $_FILES, $user->id, $folderId);
 
             if ($result['success']) {
                 $response->setData($result);
@@ -448,15 +466,10 @@ class FileController
     // Метод для скачивания файла (проверка доступа)
     public function download(Request $request, Response $response)
     {
-        session_start();
-        if (!isset($_SESSION['user_id'])) {
-            http_response_code(401);
-            $response->setData(['error' => 'Требуется аутентификация']);
-            $response->sendJson();
-            return;
-        }
+        $user = $this->authenticateUser($request, $response);
+        if (!$user) return;
 
-        $userId = (int)$_SESSION['user_id'];
+        $userId = $user->id;
 
         // Получаем имя файла из GET-параметра
         $fileName = $_GET['file'] ?? '';
@@ -486,7 +499,7 @@ class FileController
 
         // Проверяем доступ: владелец или расшарен
         $isOwner = $file['user_id'] === $userId;
-        $isSharedToMeByEmail = !empty($sharedFileRepo->findBy('shared_files', ['file_id' => $file['id'], 'shared_with_email' => $_SESSION['email']]));
+        $isSharedToMeByEmail = !empty($sharedFileRepo->findBy('shared_files', ['file_id' => $file['id'], 'shared_with_email' => $user->email]));
         $isSharedToMeByGroup = $shareByGroupService->hasAccessByGroup($userId, 'file', $file['id']);
 
         if (!($isOwner || $isSharedToMeByEmail || $isSharedToMeByGroup)) {
@@ -514,15 +527,10 @@ class FileController
 
     public function delete(Request $request, Response $response)
     {
-        try {
-            session_start();
-            if (!isset($_SESSION['user_id'])) {
-                http_response_code(401);
-                $response->setData(['error' => 'Требуется аутентификация']);
-                $response->sendJson();
-                return;
-            }
+        $user = $this->authenticateUser($request, $response);
+        if (!$user) return;
 
+        try {
             $data = $request->getData();
             $fileId = $data['file_id'] ?? null;
 
@@ -534,7 +542,7 @@ class FileController
             }
 
             $service = App::getService('file_service');
-            $success = $service->deleteFile($fileId, $_SESSION['user_id']);
+            $success = $service->deleteFile($fileId, $user->id);
 
             if ($success) {
                 $response->setData(['success' => true, 'message' => 'Файл удалён']);
@@ -557,13 +565,10 @@ class FileController
 
     public function shared(Request $request, Response $response)
     {
-        session_start();
-        if (!isset($_SESSION['user_id'])) {
-            $response->sendHtml('login.php');
-            return;
-        }
+        $user = $this->authenticateUser($request, $response);
+        if (!$user) return;
 
-        $userId = $_SESSION['user_id'];
+        $userId = $user->id;
         $sharedFileRepo = App::getService('shared_file_repository');
         $sharedFolderRepo = App::getService('shared_folder_repository');
         $fileRepo = App::getService('file_repository');
@@ -571,7 +576,7 @@ class FileController
         $shareByGroupService = App::getService('share_by_group_service');
 
         // --- Старые расшаренные (email) ---
-        $sharedFilesByEmail = $sharedFileRepo->findBy('shared_files', ['shared_with_email' => $_SESSION['email']]);
+        $sharedFilesByEmail = $sharedFileRepo->findBy('shared_files', ['shared_with_email' => $user->email]);
         foreach ($sharedFilesByEmail as &$file) {
             $originalFile = $fileRepo->find('files', $file['file_id']);
             $file['original_name'] = $originalFile['original_name'] ?? 'Неизвестный файл';
@@ -579,7 +584,7 @@ class FileController
             $file['is_shared_by_group'] = false;
         }
 
-        $sharedFoldersByEmail = $sharedFolderRepo->findBy('shared_folders', ['shared_with_email' => $_SESSION['email']]);
+        $sharedFoldersByEmail = $sharedFolderRepo->findBy('shared_folders', ['shared_with_email' => $user->email]);
         foreach ($sharedFoldersByEmail as &$folder) {
             $originalFolder = $folderRepo->find('folders', $folder['folder_id']);
             $folder['name'] = $originalFolder['name'] ?? 'Неизвестная папка';

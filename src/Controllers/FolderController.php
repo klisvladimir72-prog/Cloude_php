@@ -5,19 +5,24 @@ namespace Src\Controllers;
 use Src\Core\Request;
 use Src\Core\Response;
 use Src\Core\App;
+use Src\Middleware\AuthMiddleware;
+
 
 class FolderController
 {
     public function create(Request $request, Response $response)
     {
         try {
-            session_start();
-            if (!isset($_SESSION['user_id'])) {
+            $authResult = AuthMiddleware::handle($request, $response);
+            if (!$authResult) {
                 http_response_code(401);
-                $response->setData(['success' => false, 'message' => 'Требуется аутентификация']);
-                $response->sendJson();
+                $response->sendHtml('login.php');
                 return;
             }
+
+            // Получаем объект пользователя
+            $user = $authResult['user'];
+            $userId = $user->id;
 
             $data = $request->getData();
             $name = trim($data['name'] ?? '');
@@ -32,10 +37,10 @@ class FolderController
 
             if ($parentId === '' || $parentId === 'null' || $parentId === 'undefined') {
                 $parentId = null;
-            } 
+            }
 
             $service = App::getService('folder_service');
-            $success = $service->createFolder($name, $_SESSION['user_id'], $parentId);
+            $success = $service->createFolder($name, $userId, $parentId);
 
             if ($success) {
                 $response->setData(['success' => true, 'message' => 'Папка создана']);
@@ -58,13 +63,16 @@ class FolderController
     public function delete(Request $request, Response $response)
     {
         try {
-            session_start();
-            if (!isset($_SESSION['user_id'])) {
+            $authResult = AuthMiddleware::handle($request, $response);
+            if (!$authResult) {
                 http_response_code(401);
-                $response->setData(['error' => 'Требуется аутентификация']);
-                $response->sendJson();
+                $response->sendHtml('login.php');
                 return;
             }
+
+            // Получаем объект пользователя
+            $user = $authResult['user'];
+            $userId = $user->id;
 
             $data = $request->getData();
             $folderId = $data['folder_id'] ?? null;
@@ -77,7 +85,7 @@ class FolderController
             }
 
             $service = App::getService('folder_service');
-            $success = $service->deleteFolder($folderId, $_SESSION['user_id']);
+            $success = $service->deleteFolder($folderId, $userId);
 
             if ($success) {
                 $response->setData(['success' => true, 'message' => 'Папка и всё её содержимое удалены']);

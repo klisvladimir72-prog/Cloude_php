@@ -2,7 +2,7 @@
 <div class="container">
     <h1>Мои файлы и папки</h1>
     <!-- Отображение логина авторизованного пользователя -->
-    <p>Вы вошли как: <strong><?php echo htmlspecialchars($_SESSION['login'] ?? 'Гость'); ?></strong></p>
+    <p>Вы вошли как: <strong><?php echo htmlspecialchars($login ?? 'Гость'); ?></strong></p>
 
     <!-- Хлебные крошки -->
     <div class="breadcrumbs">
@@ -190,12 +190,6 @@
 </div>
 
 <script>
-    // --- Код JavaScript остается без изменений ---
-    // (Вставьте сюда весь ваш текущий код из блока <script> в dashboard.php)
-    // Формы, удаление, шаринг, модальное окно и т.д.
-    // Важно: не изменяйте логику, которая вызывает shareFile/shareFolder,
-    // так как она работает с ID оригинальных файлов/папок, что корректно.
-
     // Форма создания папки
     const createFolderForm = document.getElementById('create-folder-form');
     if (createFolderForm) {

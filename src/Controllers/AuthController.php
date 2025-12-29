@@ -5,7 +5,7 @@ namespace Src\Controllers;
 use Src\Core\Request;
 use Src\Core\Response;
 use Src\Core\App;
-use Src\Services\AuthService;
+use Src\Middleware\AuthMiddleware;
 
 class AuthController
 {
@@ -133,5 +133,102 @@ class AuthController
             'httponly' => true,
             'samesite' => 'Strict'
         ]);
+    }
+
+    public function showChangePasswordForm(Request $request, Response $response)
+    {
+        // Проверяем токен через AuthMiddleware
+        $authResult = AuthMiddleware::handle($request, $response);
+        if (!$authResult) {
+            http_response_code(401);
+            $response->sendHtml('login.php');
+            return;
+        }
+
+        // Получаем объект пользователя (необязательно, можно использовать его данные)
+        $user = $authResult['user'];
+        $userId = $user->id;
+
+        // Просто отображаем форму
+        $response->sendHtml('change_password.php', [
+            'login' => $user->login,
+            'id' => $userId
+        ]);
+    }
+
+    public function changePassword(Request $request, Response $response)
+    {
+        // Проверяем токен через AuthMiddleware
+        $authResult = AuthMiddleware::handle($request, $response);
+        if (!$authResult) {
+            http_response_code(401);
+            $response->sendHtml('login.php');
+            return;
+        }
+
+        // Получаем объект пользователя
+        $user = $authResult['user'];
+        $userId = $user->id;
+
+        $data = $request->getData();
+        $currentPassword = $data['current_password'] ?? '';
+        $newPassword = $data['new_password'] ?? '';
+        $confirmNewPassword = $data['confirm_new_password'] ?? '';
+
+        // Проверки
+        if (!$currentPassword || !$newPassword || !$confirmNewPassword) {
+            http_response_code(400);
+            $response->setData(['success' => false, 'message' => 'Все поля обязательны']);
+            $response->sendJson();
+            return;
+        }
+
+        if ($newPassword !== $confirmNewPassword) {
+            http_response_code(400);
+            $response->setData(['success' => false, 'message' => 'Новый пароль и подтверждение не совпадают']);
+            $response->sendJson();
+            return;
+        }
+
+        // Проверим, не слишком ли короткий новый пароль (например, 6 символов)
+        if (strlen($newPassword) < 6) {
+            http_response_code(400);
+            $response->setData(['success' => false, 'message' => 'Новый пароль должен быть не менее 6 символов']);
+            $response->sendJson();
+            return;
+        }
+
+        $userRepo = App::getService('user_repository');
+
+        // Получаем текущий хеш пароля из БД
+        $currentUserData = $userRepo->find('users', $userId);
+        if (!$currentUserData) {
+            http_response_code(500);
+            $response->setData(['success' => false, 'message' => 'Ошибка: пользователь не найден']);
+            $response->sendJson();
+            return;
+        }
+
+        // Проверяем текущий пароль
+        if (!password_verify($currentPassword, $currentUserData['password_hash'])) {
+            http_response_code(400);
+            $response->setData(['success' => false, 'message' => 'Текущий пароль неверен']);
+            $response->sendJson();
+            return;
+        }
+
+        // Хешируем новый пароль
+        $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+
+        // Обновляем пароль в БД
+        $success = $userRepo->update($userId, ['password_hash' => $hashedNewPassword]);
+
+        if ($success) {
+            $response->setData(['success' => true, 'message' => 'Пароль успешно изменён']);
+        } else {
+            http_response_code(500);
+            $response->setData(['success' => false, 'message' => 'Ошибка при изменении пароля']);
+        }
+        $response->sendJson();
     }
 }

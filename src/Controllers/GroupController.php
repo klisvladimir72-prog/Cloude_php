@@ -37,6 +37,7 @@ class GroupController
         // Получаем объект пользователя
         $user = $authResult['user'];
         $userLogin = $user->login;
+        $userId = $user->id;
 
         $usersRepo = App::getService('user_repository');
 

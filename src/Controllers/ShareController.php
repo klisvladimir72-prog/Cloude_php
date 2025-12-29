@@ -341,6 +341,7 @@ class ShareController
             'allUsers' => $allUsers,
             'usersInGroups' => $usersInGroups,
             'login' => $user->login,
+            'id'=> $userId
         ]);
     }
 }

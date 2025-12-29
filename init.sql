@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS shared_resources_by_group (
     INDEX idx_shared_by (shared_by_user_id)
 );
 
---Таблица для токенов 
+-- Таблица для токенов 
 CREATE TABLE IF NOT EXISTS user_tokens (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,

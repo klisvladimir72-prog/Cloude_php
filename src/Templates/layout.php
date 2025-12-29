@@ -10,7 +10,10 @@
     <nav class="navbar">
       <a href="/" class="logo">Cloud Storage</a>
       <div class="nav-links">
-        <?php if (isset($id)): ?> <?php if (isset($login) && $login === 'admin'): ?>
+        <?php if (isset($id)): ?>
+        <a href="/change-password">Сменить пароль</a>
+        <?php if (isset($login) && $login === 'admin'): ?>
+        <a href="/admin/users">Пользователи</a>
         <a href="/admin/groups">Группы</a>
         <?php endif; ?>
         <a href="/logout" class="btn-logout">Выйти</a>

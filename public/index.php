@@ -15,6 +15,7 @@ use Src\Repositories\FolderRepository;
 use Src\Services\AuthService;
 use Src\Services\FileService;
 use Src\Services\FolderService;
+use Src\Middleware\AuthMiddleware;
 
 // --- Регистрируем существующие и новые сервисы в DI-контейнере ---
 App::bind('user_repository', fn() => new UserRepository());
@@ -133,11 +134,10 @@ $router->add('GET', 'get-shared-users/file/{fileId}', function (Request $request
         return;
     }
 
-    session_start();
-    if (!isset($_SESSION['user_id'])) {
+    $authResult = AuthMiddleware::handle($request, $response);
+    if (!$authResult) {
         http_response_code(401);
-        $response->setData(['error' => 'Требуется аутентификация']);
-        $response->sendJson();
+        $response->sendHtml('login.php');
         return;
     }
 
@@ -168,11 +168,10 @@ $router->add('GET', 'get-shared-users/folder/{folderId}', function (Request $req
         return;
     }
 
-    session_start();
-    if (!isset($_SESSION['user_id'])) {
+    $authResult = AuthMiddleware::handle($request, $response);
+    if (!$authResult) {
         http_response_code(401);
-        $response->setData(['error' => 'Требуется аутентификация']);
-        $response->sendJson();
+        $response->sendHtml('login.php');
         return;
     }
 
@@ -234,7 +233,41 @@ $router->add('GET', 'get-groups', function (Request $request, Response $response
     $controller = new \Src\Controllers\ShareController();
     $controller->getGroups($request, $response);
 });
-// ---
+
+// Маршрут для отображения админ-панели пользователей
+$router->add('GET', 'admin/users', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\UserController();
+    $controller->showAdminUserPanel($request, $response);
+});
+
+// Маршрут для обновления поля пользователя 
+$router->add('POST', 'update-user-field', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\UserController();
+    $controller->updateUserField($request, $response);
+});
+
+// Маршрут для сброса пароля пользователя 
+$router->add('POST', 'reset-user-password', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\UserController();
+    $controller->resetUserPassword($request, $response);
+});
+
+// Маршрут для удаления пользователя 
+$router->add('DELETE', 'delete-user', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\UserController();
+    $controller->deleteUser($request, $response);
+});
+
+// Маршрут для смены пароля (доступен любому аутентифицированному пользователю)
+$router->add('GET', 'change-password', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\AuthController();
+    $controller->showChangePasswordForm($request, $response);
+});
+
+$router->add('POST', 'change-password', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\AuthController();
+    $controller->changePassword($request, $response);
+});
 
 // Обработка запроса
 $route = $request->getRoute();

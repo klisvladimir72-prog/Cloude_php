@@ -6,16 +6,57 @@ use Src\Core\App;
 
 class FileService
 {
-    private const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    private const MAX_FILE_SIZE = 2 * 1000 * 1024 * 1024; // 2 Gb
     private const ALLOWED_MIME_TYPES = [
+        // Изображения
         'image/jpeg',
         'image/png',
+        'image/gif',
+        'image/webp',
+
+        // Текст
         'text/plain',
+
+        // PDF
         'application/pdf',
+
+        // Документы Word
         'application/msword', // .doc
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+
+        // Электронные таблицы Excel
         'application/vnd.ms-excel', // .xls
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' // .xlsx
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+
+        // Презентации PowerPoint
+        'application/vnd.ms-powerpoint', // .ppt
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
+
+        // Видео — общие (веб)
+        'video/mp4',
+        'video/webm',
+        'video/ogg',
+
+        // Видео — для фильмов (популярные контейнеры и кодеки)
+        'video/x-matroska',       // .mkv — самый популярный контейнер для фильмов
+        'video/quicktime',        // .mov — Apple QuickTime, часто используется в киноиндустрии
+        'video/x-ms-wmv',         // .wmv — Microsoft Windows Media Video
+        'video/x-msvideo',        // .avi — старый, но всё ещё распространённый формат
+        'video/mpeg',             // .mpg, .mpeg — MPEG-1/2, иногда используется для DVD
+        'video/x-flv',            // .flv — устаревший, но встречается
+        'video/x-m4v',            // .m4v — похож на mp4, часто используется Apple
+
+        // Аудио (для полноты, если нужен звук к видео или отдельные файлы)
+        'audio/mpeg',             // .mp3
+        'audio/wav',
+        'audio/ogg',
+        'audio/aac',
+        'audio/flac',             // .flac — без потерь, популярен у аудиофилов
+        'audio/x-ms-wma',         // .wma — Microsoft Windows Media Audio
+
+        // Дополнительно: если планируешь поддерживать 3D-фильмы или специальные форматы
+        'video/3gpp',             // .3gp — мобильные видео
+        'video/3gpp2',            // .3g2 — улучшенная версия 3GPP
     ];
 
     public function handleUpload(array $data, array $files, int $userId, ?int $folderId = null)
@@ -90,91 +131,6 @@ class FileService
             return false;
         }
     }
-
-    // public function prepareDownload(string $fileName, int $userId): ?array
-    // {
-    //     try {
-    //         $repo = App::getService('file_repository');
-    //         $sharedFolderRepo = App::getService('shared_folder_repository');
-    //         $shareByGroupService = App::getService('share_by_group_service'); // <-- Новый сервис
-
-    //         // Находим файл по имени
-    //         $files = $repo->findBy('files', ['filename' => $fileName]);
-    //         $fileRecord = !empty($files) ? $files[0] : null;
-
-    //         if (!$fileRecord) {
-    //             return null; // Файл не найден
-    //         }
-
-    //         // Проверяем, является ли текущий пользователь владельцем файла
-    //         if ($fileRecord['user_id'] === $userId) {
-    //             // Владелец - имеет право
-    //             $uploadDir = __DIR__ . '/../../uploads/';
-    //             $filePath = $uploadDir . $fileRecord['filename'];
-    //             if (!file_exists($filePath)) {
-    //                 return null; // Файл физически не существует
-    //             }
-    //             return [
-    //                 'file_record' => $fileRecord,
-    //                 'file_path' => $filePath
-    //             ];
-    //         }
-
-    //         // Проверяем, есть ли доступ к файлу через группы
-    //         if ($shareByGroupService->hasAccessByGroup($userId, 'file', $fileRecord['id'])) {
-    //             // Доступ через группу - имеет право
-    //             $uploadDir = __DIR__ . '/../../uploads/';
-    //             $filePath = $uploadDir . $fileRecord['filename'];
-    //             if (!file_exists($filePath)) {
-    //                 return null; // Файл физически не существует
-    //             }
-    //             return [
-    //                 'file_record' => $fileRecord,
-    //                 'file_path' => $filePath
-    //             ];
-    //         }
-
-    //         // Получаем folder_id файла
-    //         $folderId = $fileRecord['folder_id'];
-
-    //         // Если файл не в папке (корень), проверяем, был ли он расшарен отдельно (email)
-    //         if ($folderId === null) {
-    //             $sharedFiles = $sharedFolderRepo->getByFileIdAndEmail($fileRecord['id'], $_SESSION['email']);
-    //             if (!empty($sharedFiles)) {
-    //                 $uploadDir = __DIR__ . '/../../uploads/';
-    //                 $filePath = $uploadDir . $fileRecord['filename'];
-    //                 if (!file_exists($filePath)) {
-    //                     return null;
-    //                 }
-    //                 return [
-    //                     'file_record' => $fileRecord,
-    //                     'file_path' => $filePath
-    //                 ];
-    //             }
-    //             return null; // Ни владелец, ни через группу, ни расшарен (email) - нет прав
-    //         }
-
-    //         // Файл находится в папке. Проверяем, была ли эта папка (или любая из её родительских) расшарена текущему пользователю (email)
-    //         if ($this->isFolderSharedToUser($folderId, $_SESSION['email'], $sharedFolderRepo, $repo)) {
-    //             // Файл находится в расшаренной папке (email) - имеет право на скачивание
-    //             $uploadDir = __DIR__ . '/../../uploads/';
-    //             $filePath = $uploadDir . $fileRecord['filename'];
-    //             if (!file_exists($filePath)) {
-    //                 return null; // Файл физически не существует
-    //             }
-    //             return [
-    //                 'file_record' => $fileRecord,
-    //                 'file_path' => $filePath
-    //             ];
-    //         }
-
-    //         // Ни владелец, ни в расшаренной папке (email), ни через группу - нет прав
-    //         return null;
-    //     } catch (\Throwable $e) {
-    //         error_log("FileService::prepareDownload error: " . $e->getMessage());
-    //         return null;
-    //     }
-    // }
 
     // Вспомогательный метод для проверки, была ли папка (или её родительская) расшарена пользователю (email)
     private function isFolderSharedToUser(int $folderId, string $email, $sharedFolderRepo, $folderRepo): bool

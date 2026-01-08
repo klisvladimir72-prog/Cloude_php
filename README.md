@@ -86,7 +86,7 @@ passwd - 123F
 
 
 
-### POST /login - *аутентификация пользователя*
+## POST /login - *аутентификация пользователя*
 
 #### ***Отправка параметров***
 - `email_or_login` - email или логин пользователя,
@@ -146,7 +146,7 @@ passwd - 123F
 }
 ```
 
-### GET /logout
+## GET /logout
 
 GET /reset_password
 

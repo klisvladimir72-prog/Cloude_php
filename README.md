@@ -14,6 +14,7 @@ init.sql - развертывание бд для работы
 config/database.php - настройки для подключения к бд
 public/index.php - точка входа
 
+<<<<<<< HEAD
 для входа:
 login - admin
 passwd - 123F
@@ -198,3 +199,14 @@ GET /files/share/{id}
 PUT /files/share/{id}/{user_id}
 
 DELETE /files/share/{id}/{user_id}
+=======
+init.sql - развертывание бд для работы
+
+config/database.php - настройки для подключения к бд 
+
+public/index.php - точка входа 
+
+для входа: 
+login - admin
+passwd - 123
+>>>>>>> 7a9d223ec961c4c4cbdae792ba9b0a91bfbaa841

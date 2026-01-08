@@ -42,6 +42,8 @@ $router->add('GET', '', function (Request $request, Response $response) {
     $controller->index($request, $response);
 });
 
+
+// FILES
 $router->add('GET', 'files', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
     $controller->index($request, $response);
@@ -77,14 +79,14 @@ $router->add('GET', 'login', function (Request $request, Response $response) {
     $controller->loginForm($request, $response);
 });
 
-$router->add('GET', 'register', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\AuthController();
-    $controller->registerForm($request, $response);
-});
-
 $router->add('POST', 'login', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\AuthController();
     $controller->login($request, $response);
+});
+
+$router->add('GET', 'register', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\AuthController();
+    $controller->registerForm($request, $response);
 });
 
 $router->add('POST', 'register', function (Request $request, Response $response) {
@@ -97,10 +99,14 @@ $router->add('GET', 'logout', function (Request $request, Response $response) {
     $controller->logout($request, $response);
 });
 
+$router->add('POST', 'reset-user-password', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\UserController();
+    $controller->resetUserPassword($request, $response);
+});
+
 $router->add('GET', 'download', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
     $controller->download($request, $response);
-    // Важно: метод download сам вызывает exit() после отправки файла
 });
 
 $router->add('POST', 'share-file', function (Request $request, Response $response) {
@@ -247,10 +253,6 @@ $router->add('POST', 'update-user-field', function (Request $request, Response $
 });
 
 // Маршрут для сброса пароля пользователя 
-$router->add('POST', 'reset-user-password', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\UserController();
-    $controller->resetUserPassword($request, $response);
-});
 
 // Маршрут для удаления пользователя 
 $router->add('DELETE', 'delete-user', function (Request $request, Response $response) {

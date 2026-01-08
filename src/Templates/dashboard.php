@@ -255,7 +255,7 @@
         location.reload();
     }
 
-    // Функции шаринга (предполагается, что они реализованы)
+    // Функции шаринга 
     async function shareFile(fileId) {
         // Получаем как пользователей, так и группы
         const [users, groups] = await Promise.all([fetchUsers(), fetchGroups()]);
@@ -304,7 +304,7 @@
         return data.users;
     }
 
-    // НОВАЯ функция получения групп
+    //Функция получения групп
     async function fetchGroups() {
         const response = await fetch('/get-groups'); // Используем новый маршрут
         const data = await response.json();
@@ -342,7 +342,7 @@
         }
     }
 
-    // ИЗМЕНЕННАЯ функция showUserSelectionModal для отображения пользователей и групп
+    //Функция showUserSelectionModal для отображения пользователей и групп
     async function showUserSelectionModal(users, groups) {
         return new Promise((resolve, reject) => {
             // Добавляем проверку

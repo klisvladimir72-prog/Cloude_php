@@ -41,7 +41,6 @@ class AuthController
                     'success' => true,
                     "id" => $user->id,
                     'redirect' => '/'
-
                 ]);
             } else {
                 http_response_code(500);

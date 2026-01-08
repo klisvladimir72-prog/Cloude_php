@@ -48,9 +48,9 @@ passwd - 123F
 
 ```json
 {
-    "success" => true,
-    "message" => 'Пользователь зарегистрирован. Пожалуйста, войдите.',
-    "redirect" => '/login'
+    "success": "true",
+    "message": "Пользователь зарегистрирован. Пожалуйста, войдите.",
+    "redirect" => "/login"
 }
 ```
 
@@ -63,8 +63,8 @@ passwd - 123F
 
 ```json
 {
-    "success" => false,
-    "message" => 'Пользователь с таким email или login уже существует'
+    "success": "false",
+    "message": "Пользователь с таким email или login уже существует"
 }
 ```
 
@@ -77,8 +77,8 @@ passwd - 123F
 
 ```json
 {
-    "success" => false,
-    "message" => 'Email, Login и пароль обязательны'
+    "success": "false",
+    "message": "Email, Login и пароль обязательны"
 }
 ```
 
@@ -112,9 +112,9 @@ passwd - 123F
 
 ```json
 {
-    "success" => true,
-    "id" => $user->id,
-    "redirect" => '/'
+    "success": "true",
+    "id": "$user->id",
+    "redirect": "/"
 }
 ```
 
@@ -127,8 +127,8 @@ passwd - 123F
 
 ```json
 {
-    "success" => false,
-    "message" => 'Ошибка при создании токена'
+    "success": "false",
+    "message": "Ошибка при создании токена"
 }
 ```
 
@@ -141,8 +141,8 @@ passwd - 123F
 
 ```json
 {
-    "success" => false,
-    "message" => 'Неверный логин или пароль.'
+    "success": "false",
+    "message": "Неверный логин или пароль."
 }
 ```
 

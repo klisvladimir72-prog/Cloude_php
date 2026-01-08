@@ -50,7 +50,7 @@ passwd - 123F
 {
     "success": "true",
     "message": "Пользователь зарегистрирован. Пожалуйста, войдите.",
-    "redirect" => "/login"
+    "redirect": "/login"
 }
 ```
 

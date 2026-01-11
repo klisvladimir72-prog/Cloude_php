@@ -11,12 +11,12 @@
       <a href="/" class="logo">Cloud Storage</a>
       <div class="nav-links">
         <?php if (isset($id)): ?>
-        <a href="/change-password">Сменить пароль</a>
+        <a href="/change_password">Сменить пароль</a>
         <?php if (isset($login) && $login === 'admin'): ?>
         <a href="/admin/users">Пользователи</a>
         <a href="/admin/groups">Группы</a>
         <?php endif; ?>
-        <a href="/logout" class="btn-logout">Выйти</a>
+        <a href="" class="btn-logout">Выйти</a>
         <?php else: ?>
         <a href="/login" class="btn-login">Войти</a>
         <a href="/register" class="btn-register">Регистрация</a>
@@ -26,4 +26,28 @@
 
     <main><?php echo $content ?? ''; ?></main>
   </body>
+
+  <script>
+    const logoutLink = document.querySelector('.btn-logout')
+    
+    if (logoutLink) {
+      logoutLink.addEventListener('click', async (e) => {
+        e.preventDefault()
+    
+        try {
+          const response = await fetch('/logout')
+    
+          if (response.ok) {
+            window.location.href = '/'
+          } else {
+            console.error('Ошибка при выходе: ', response.status)
+            alert('Ошибка при выходе из системы.')
+          }
+        } catch (error) {
+          console.error('Ошибка сети: ', error)
+          alert('Произошла ошибка сети.')
+        }
+      })
+    }
+  </script>
 </html>

@@ -106,7 +106,7 @@
     }
   
     try {
-      const response = await fetch('/reset-user-password', {
+      const response = await fetch('/reset_password', {
         method: 'POST',
         body: JSON.stringify({ user_id: currentUserId, new_password: newPassword }),
         headers: { 'Content-Type': 'application/json' }

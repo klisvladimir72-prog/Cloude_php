@@ -92,22 +92,34 @@ class AuthController
 
     public function logout(Request $request, Response $response)
     {
-        // Извлекаем токен из Cookie 
-        $token = $_COOKIE['auth_token'] ?? null;
 
-        if ($token) {
-            $authService = App::getService('auth_service');
+        try {
+            // Извлекаем токен из Cookie 
+            $token = $_COOKIE['auth_token'] ?? null;
 
-            $user = $authService->getUserByToken($token);
-            if ($user) {
-                $authService->removeTokenForUser($user->id);
+            if ($token) {
+                $authService = App::getService('auth_service');
+
+                $user = $authService->getUserByToken($token);
+                if ($user) {
+                    $authService->removeTokenForUser($user->id);
+                } else {
+                    http_response_code(500);
+                    echo json_encode(['success' => 'false', 'message' => 'Ошибка при выходе из системы.']);
+                    exit();
+                }
             }
+
+            $this->unsetTokenCookie();
+
+            http_response_code(200);
+            echo json_encode(['success' => 'true', 'message' => 'Вы успешно вышли из системы.']);
+            exit();
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => 'false', 'message' => 'Ошибка при выходе из системы.']);
+            exit();
         }
-
-        $this->unsetTokenCookie();
-
-        header('Location: /');
-        exit();
     }
 
     private function setTokenCookie(string $token): void
@@ -223,10 +235,10 @@ class AuthController
         $success = $userRepo->update($userId, ['password_hash' => $hashedNewPassword]);
 
         if ($success) {
-            $response->setData(['success' => true, 'message' => 'Пароль успешно изменён']);
+            $response->setData(['success' => true, 'message' => 'Пароль успешно изменён.']);
         } else {
             http_response_code(500);
-            $response->setData(['success' => false, 'message' => 'Ошибка при изменении пароля']);
+            $response->setData(['success' => false, 'message' => 'Ошибка при изменении пароля.']);
         }
         $response->sendJson();
     }

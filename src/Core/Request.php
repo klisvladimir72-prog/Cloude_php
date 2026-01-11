@@ -14,7 +14,13 @@ class Request
         $this->method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
         $input = file_get_contents('php://input');
-        $this->data = json_decode($input, true) ?: $_POST;
+
+        if ($this->method === "PUT") {
+            parse_str($input, $putData);
+            $this->data = json_decode($input, true) ?: $putData;
+        } else {
+            $this->data = json_decode($input, true) ?: $_POST;
+        }
 
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $this->route = trim($path, '/');
@@ -74,5 +80,15 @@ class Request
         }
 
         return $headers;
+    }
+
+    /**
+     * Получает параметр из GET-запроса (query string)
+     */
+    public function getQueryParam(string $key, $default = null): string
+    {
+        $queryString = $_SERVER['QUERY_STRING'] ?? '';
+        parse_str($queryString, $queryParams);
+        return $queryParams[$key] ?? $default;
     }
 }

@@ -99,10 +99,59 @@ $router->add('GET', 'logout', function (Request $request, Response $response) {
     $controller->logout($request, $response);
 });
 
-$router->add('POST', 'reset-user-password', function (Request $request, Response $response) {
+$router->add('POST', 'reset_password', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\UserController();
     $controller->resetUserPassword($request, $response);
 });
+// Маршрут для удаления пользователя 
+$router->add('DELETE', 'delete-user', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\UserController();
+    $controller->deleteUser($request, $response);
+});
+
+// Маршрут для отображения формы смены пароля  (доступен любому аутентифицированному пользователю)
+$router->add('GET', 'change_password', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\AuthController();
+    $controller->showChangePasswordForm($request, $response);
+});
+
+// Маршрут для смены пароля (доступен любому аутентифицированному пользователю)
+$router->add('POST', 'change_password', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\AuthController();
+    $controller->changePassword($request, $response);
+});
+
+
+// USERS 
+$router->add('GET', 'get-users', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\ShareController();
+    $controller->getUsers($request, $response);
+});
+
+$router->add('GET', 'users/list', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\UserController();
+    $controller->getUsersList($request, $response);
+});
+
+$router->add('GET', 'users/search', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\UserController();
+    $controller->getUserByEmail($request, $response);
+});
+
+$router->add('GET', 'users/get', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\UserController();
+    $controller->getUserById($request, $response);
+});
+
+$router->add('PUT', 'users/update', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\UserController();
+    $controller->updateUserFieldByUser($request, $response);
+});
+
+
+
+
+
 
 $router->add('GET', 'download', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
@@ -124,10 +173,6 @@ $router->add('GET', 'shared', function (Request $request, Response $response) {
     $controller->shared($request, $response);
 });
 
-$router->add('GET', 'get-users', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\ShareController();
-    $controller->getUsers($request, $response);
-});
 
 $router->add('GET', 'get-shared-users/file/{fileId}', function (Request $request, Response $response) {
     $matches = $request->getMatches();
@@ -249,27 +294,10 @@ $router->add('GET', 'admin/users', function (Request $request, Response $respons
 // Маршрут для обновления поля пользователя 
 $router->add('POST', 'update-user-field', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\UserController();
-    $controller->updateUserField($request, $response);
+    $controller->updateUserFieldByAdmin($request, $response);
 });
 
-// Маршрут для сброса пароля пользователя 
 
-// Маршрут для удаления пользователя 
-$router->add('DELETE', 'delete-user', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\UserController();
-    $controller->deleteUser($request, $response);
-});
-
-// Маршрут для смены пароля (доступен любому аутентифицированному пользователю)
-$router->add('GET', 'change-password', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\AuthController();
-    $controller->showChangePasswordForm($request, $response);
-});
-
-$router->add('POST', 'change-password', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\AuthController();
-    $controller->changePassword($request, $response);
-});
 
 // Обработка запроса
 $route = $request->getRoute();

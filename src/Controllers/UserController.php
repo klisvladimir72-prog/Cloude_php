@@ -9,7 +9,6 @@ use Src\Middleware\AuthMiddleware;
 
 class UserController
 {
-
     private function isAdminCheck(Request $request, Response $response)
     {
         $authResult = AuthMiddleware::handle($request, $response);
@@ -20,7 +19,7 @@ class UserController
         }
 
         $user = $authResult['user'];
-        if ($user->login !== 'admin') {
+        if ($user->role !== 1) {
             http_response_code(403);
             $response->setData(['error' => 'Доступ запрещен']);
             $response->sendJson();
@@ -48,7 +47,99 @@ class UserController
         ]);
     }
 
-    public function updateUserField(Request $request, Response $response)
+    public function getUsersList(Request $request, Response $response)
+    {
+        $userRepo = App::getService('user_repository');
+
+
+        $allUsers = $userRepo->findAll($userRepo->getTable());
+
+        if (!$allUsers) {
+            http_response_code(500);
+            $response->setData(['success' => 'false', 'message' => 'Ошибка при получении списка пользователей.']);
+            $response->sendJson();
+            return;
+        }
+
+        $filteredUsers = array_map(function ($user) {
+            unset($user['password_hash']);
+            unset($user['created_at']);
+            return $user;
+        }, $allUsers);
+
+        $response->setData($filteredUsers);
+        http_response_code(200);
+        $response->sendJson();
+    }
+
+    public function getUserByEmail(Request $request, Response $response)
+    {
+        $userRepo = App::getService('user_repository');
+
+        $email = $request->getQueryParam('email');
+        if (!$email) {
+            http_response_code(500);
+            $response->setData(['success' => 'false', 'message' => 'email отсутствует.']);
+            $response->sendJson();
+            return;
+        }
+
+
+        $user = $userRepo->findBy($userRepo->getTable(), ["email" => $email]);
+
+        if (!$user) {
+            http_response_code(400);
+            $response->setData(['success' => 'false', 'message' => "Пользователь с '$email' не найден."]);
+            $response->sendJson();
+            return;
+        }
+
+
+        unset($user[0]['password_hash']);
+        unset($user[0]['created_at']);
+
+        http_response_code(200);
+        $response->setData(['success' => 'true', 'user' => $user]);
+
+
+        $response->sendJson();
+    }
+
+    public function getUserById(Request $request, Response $response)
+    {
+        $userRepo = App::getService('user_repository');
+
+        $user_id = $request->getQueryParam('id');
+
+        if (!$user_id) {
+            http_response_code(500);
+            $response->setData(['success' => 'false', 'message' => 'id отсутствует.']);
+            $response->sendJson();
+            return;
+        }
+
+
+        $user = $userRepo->findBy($userRepo->getTable(), ["id" => $user_id]);
+
+        if (!$user) {
+            http_response_code(400);
+            $response->setData(['success' => 'false', 'message' => "Пользователь с '$user_id' не найден."]);
+            $response->sendJson();
+            return;
+        }
+
+
+        unset($user[0]['password_hash']);
+        unset($user[0]['created_at']);
+
+        http_response_code(200);
+        $response->setData(['success' => 'true', 'user' => $user]);
+
+
+        $response->sendJson();
+    }
+
+    public function updateUserFieldByAdmin(Request $request, Response $response)
     {
         $user = $this->isAdminCheck($request, $response);
         $userId = $user->id;
@@ -153,6 +244,77 @@ class UserController
             http_response_code(500);
             $response->setData(['error' => 'Ошибка при удалении пользователя.']);
         }
+        $response->sendJson();
+    }
+
+    public function updateUserFieldByUser(Request $request, Response $response)
+    {
+        $authResult = AuthMiddleware::handle($request, $response);
+        if (!$authResult) {
+            http_response_code(401);
+            $response->sendHtml('login.php');
+            return;
+        }
+
+        // Получаем объект пользователя (необязательно, можно использовать его данные)
+        $user = $authResult['user'];
+        $userId = $user->id;
+
+        $data = $request->getData();
+
+
+        // Запрет на смену пароля, id, роли
+        if (!is_array($data) || empty($data)) {
+            http_response_code(400);
+            $response->setData(['success' => 'false', 'message' => 'Данные для обновления не предоставлены.']);
+            $response->sendJson();
+            return;
+        }
+
+        $forbiddenFields = ['password', 'id', 'role'];
+        foreach ($data as $field => $value) {
+            if (in_array($field, $forbiddenFields)) {
+                http_response_code(403);
+                $response->setData(['success' => 'false', 'message' => 'Доступ запрещен.']);
+                $response->sendJson();
+                return;
+            }
+        }
+
+        $allowFields = ['email', 'login'];
+        // Проверка на запрещенное поле 
+        foreach ($data as $field => $value) {
+            if (!in_array($field, $allowFields)) {
+                http_response_code(403);
+                $response->setData(['success' => 'false', 'message' => "Поле '$field' не разрешено для редактирования."]);
+                $response->sendJson();
+                return;
+            }
+        }
+
+        $userRepo = App::getService('user_repository');
+        foreach ($data as $field => $value) {
+            if ($field === 'email' || $field === 'login') {
+                $existingUser = $userRepo->findForAuth($value);
+                if ($existingUser && $existingUser['id'] !== $userId) {
+                    http_response_code(400);
+                    $response->setData(['success' => 'false', 'message' => "Значение '$value' уже используется."]);
+                    $response->sendJson();
+                    return;
+                }
+            }
+        }
+
+        $success = $userRepo->update($userId, $data);
+
+        if ($success) {
+            http_response_code(200);
+            $response->setData(['success' => 'true', 'message' => 'Данные обновлены.']);
+        } else {
+            http_response_code(500);
+            $response->setData(['success' => 'false', 'message' => 'Ошибка при обновлении.']);
+        }
+
         $response->sendJson();
     }
 }

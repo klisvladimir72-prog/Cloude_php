@@ -6,6 +6,11 @@ class UserRepository extends BaseRepository
 {
     protected string $table = 'users';
 
+    public function getTable(): string
+    {
+        return $this->table;
+    }
+
     // --- Метод для проверки уникальности email и login (для регистрации) ---
     /**
      * Проверяет, существует ли пользователь с указанным email или login.

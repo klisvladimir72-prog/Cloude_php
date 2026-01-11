@@ -213,7 +213,7 @@
             if(dataResponse.success) location.reload();
         });
     }
-
+    
     // Форма загрузки файла
     const uploadForm = document.getElementById('upload-form');
     if (uploadForm) {

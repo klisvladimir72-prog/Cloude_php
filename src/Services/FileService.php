@@ -81,6 +81,11 @@ class FileService
             }
 
             $uploadDir = __DIR__ . '/../../uploads/';
+
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
             $fileName = uniqid() . '_' . basename($file['name']);
             $filePath = $uploadDir . $fileName;
 
@@ -105,53 +110,72 @@ class FileService
         }
     }
 
-    public function deleteFile(int $fileId, int $userId): bool
+    public function deleteFile(int $fileId, int $userId, int $userRole): array
     {
         try {
             $repo = App::getService('file_repository');
             $file = $repo->find('files', $fileId);
 
-            if (!$file || $file['user_id'] !== $userId) {
-                return false;
+            if (!$file) {
+                return ['success' => false, "message" => "Файл не найден."];
             }
 
-            // --- Новая логика: Удалить шаринги ---
+            if ($file['user_id'] !== $userId && $userRole !== 1) {
+                return ['success' => false, 'message' => 'Нет прав на удаление файла.'];
+            }
+
+
+            // --- Удалить шаринги ---
             $shareService = App::getService('share_by_group_service');
-            $shareService->removeSharesForResource('file', $fileId); // Удаляем шаринги для файла
-            // ---
+            $shareService->removeSharesForResource('file', $fileId);
 
             $filePath = __DIR__ . '/../../uploads/' . $file['filename'];
             if (file_exists($filePath)) {
                 unlink($filePath);
             }
 
-            return $repo->delete($fileId);
+            $deleted = $repo->delete($fileId);
+            if (!$deleted) {
+                return ['success' => false, 'message' => "Ошибка при удалении файла."];
+            }
+
+            return ['success' => true, 'message' => "Файл успешно удален."];
         } catch (\Throwable $e) {
             error_log("FileService::deleteFile error: " . $e->getMessage());
-            return false;
+            return ['success' => false, 'message' => 'Произошла внутрення ошибка.'];
         }
     }
 
-    // Вспомогательный метод для проверки, была ли папка (или её родительская) расшарена пользователю (email)
-    private function isFolderSharedToUser(int $folderId, string $email, $sharedFolderRepo, $folderRepo): bool
+    public function isUniqueFileNameByUser(int $userId, string $fileNewName): bool
     {
-        $currentFolderId = $folderId;
-        while ($currentFolderId !== null) {
-            $sharedFolders = $sharedFolderRepo->findBy('shared_folders', [
-                'folder_id' => $currentFolderId,
-                'shared_with_email' => $email
-            ]);
-            if (!empty($sharedFolders)) {
-                return true; // Нашли расшаренную папку (email)
-            }
+        $fileRepo = App::getService('file_repository');
 
-            $folder = $folderRepo->find('folders', $currentFolderId);
-            if (!$folder) {
-                break;
-            }
-            $currentFolderId = $folder['parent_id'];
+        $success = $fileRepo->findBy($fileRepo->getTable(), ['original_name' => $fileNewName, 'user_id' => $userId]);
+
+        if ($success) {
+            return false;
         }
 
-        return false; // Ни одна папка в цепочке не была расшарена (email)
+        return true;
+    }
+
+    public function extractFileInfo(string $fileId): array|null
+    {
+        $fileRepo = App::getService('file_repository');
+        $file = $fileRepo->find($fileRepo->getTable(), $fileId);
+        $fileName = $file['original_name'];
+
+        if (!$file) {
+            return null;
+        }
+
+        $info = pathinfo($fileName);
+
+        return [
+            'name' => $info['filename'],
+            'extension' => strtolower($info['extension']),
+            'basename' => $info['basename'],
+            'dirname' => $info['dirname'] ?? ".",
+        ];
     }
 }

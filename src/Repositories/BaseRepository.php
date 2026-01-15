@@ -9,6 +9,7 @@ abstract class BaseRepository
 {
     protected string $table;
     protected Db $db;
+    private static $columnTableCashe = [];
 
     public function __construct()
     {
@@ -29,6 +30,18 @@ abstract class BaseRepository
     public function getTable(): string
     {
         return $this->table;
+    }
+
+    public function getTableColumns(): array
+    {
+        if (!isset(self::$columnTableCashe[$this->table])) {
+            $sql = "DESCRIBE {$this->table}";
+            $stmt = $this->db->getConnection()->prepare($sql);
+            $stmt->execute();
+            self::$columnTableCashe[$this->table] = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        }
+
+        return self::$columnTableCashe[$this->table];
     }
 
     public function create(array $data): bool
@@ -54,10 +67,20 @@ abstract class BaseRepository
     public function update(int $id, array $data): bool
     {
         try {
-            $fields = array_keys($data);
+            $allowedColumns = $this->getTableColumns();
+
+            $filteredData = array_intersect_key($data, array_flip($allowedColumns));
+
+            $filteredData = array_filter($filteredData, fn($value) => !empty($value));
+
+            if (empty($filteredData)) {
+                return true;
+            }
+
+            $fields = array_keys($filteredData);
             $setClause = implode(' = ?, ', $fields) . ' = ?';
             $sql = "UPDATE {$this->table} SET $setClause WHERE id = ?";
-            $values = array_values($data);
+            $values = array_values($filteredData);
             $values[] = $id;
             $stmt = $this->db->getConnection()->prepare($sql);
             return $stmt->execute($values);
@@ -106,7 +129,7 @@ abstract class BaseRepository
             }
 
             $whereClause = implode(' AND ', $conditions);
-            $sql = "SELECT * FROM $table WHERE $whereClause";
+            $sql = "SELECT * FROM $this->table WHERE $whereClause";
 
             $stmt = $this->db->getConnection()->prepare($sql);
 

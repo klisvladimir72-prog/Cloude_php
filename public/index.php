@@ -43,24 +43,6 @@ $router->add('GET', '', function (Request $request, Response $response) {
 });
 
 
-// FILES
-$router->add('GET', 'files', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\FileController();
-    $controller->index($request, $response);
-});
-
-// Загрузка
-$router->add('POST', 'upload', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\FileController();
-    $controller->upload($request, $response);
-});
-
-// Удаление файла
-$router->add('DELETE', 'delete-file', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\FileController();
-    $controller->delete($request, $response);
-});
-
 // Удаление папки
 $router->add('DELETE', 'delete-folder', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FolderController();
@@ -99,15 +81,8 @@ $router->add('GET', 'logout', function (Request $request, Response $response) {
     $controller->logout($request, $response);
 });
 
-$router->add('POST', 'reset_password', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\UserController();
-    $controller->resetUserPassword($request, $response);
-});
-// Маршрут для удаления пользователя 
-$router->add('DELETE', 'delete-user', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\UserController();
-    $controller->deleteUser($request, $response);
-});
+
+
 
 // Маршрут для отображения формы смены пароля  (доступен любому аутентифицированному пользователю)
 $router->add('GET', 'change_password', function (Request $request, Response $response) {
@@ -147,12 +122,88 @@ $router->add('PUT', 'users/update', function (Request $request, Response $respon
     $controller = new \Src\Controllers\UserController();
     $controller->updateUserFieldByUser($request, $response);
 });
+// ____________USERS
+
+// ADMIN
+$router->add('GET', 'admin/users/list', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\AdminController();
+    $controller->getUsersList($request, $response);
+});
+
+$router->add('GET', 'admin/users/get', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\AdminController();
+    $controller->getUserById($request, $response);
+});
+
+$router->add('DELETE', 'admin/users/delete', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\AdminController();
+    $controller->deleteUser($request, $response);
+});
+
+$router->add('PUT', 'admin/users/update', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\AdminController();
+    $controller->updateUserField($request, $response);
+});
+
+// Сброс пороля (user123) или задать новый пароль
+$router->add('POST', 'admin/users/reset_password', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\AdminController();
+    $controller->resetUserPassword($request, $response);
+});
+
+// ___________ADMIN
+
+
+// FILES 
+
+// Получение списка всех файлов
+$router->add('GET', 'files/list', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\FileController();
+    $controller->getFilesList($request, $response);
+});
+
+// Получение списка всех файлов пользователя
+$router->add('GET', 'files/list/get', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\FileController();
+    $controller->getFilesListById($request, $response);
+});
+
+// Получение данных о файле по id файла 
+$router->add('GET', 'files/get', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\FileController();
+    $controller->getFileByFileId($request, $response);
+});
+
+// Изменение имени файла
+$router->add('PUT', 'files/rename', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\FileController();
+    $controller->renameFile($request, $response);
+});
+
+// Удаление файла по id 
+$router->add('DELETE', 'files/remove', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\FileController();
+    $controller->delete($request, $response);
+});
+
+// Логика для шаблона отображения файлов в приложении
+$router->add('GET', 'files', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\FileController();
+    $controller->index($request, $response);
+});
+
+// Загрузка
+$router->add('POST', 'upload', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\FileController();
+    $controller->upload($request, $response);
+});
 
 
 
 
 
 
+// ___________FILES
 $router->add('GET', 'download', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
     $controller->download($request, $response);
@@ -243,7 +294,7 @@ $router->add('GET', 'get-shared-users/folder/{folderId}', function (Request $req
 });
 // ---
 
-// Маршрут для отображения админ-панели теперь в ShareController
+// Маршрут для отображения админ-панели 
 $router->add('GET', 'admin/groups', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\ShareController();
     $controller->showAdminPanel($request, $response);
@@ -291,11 +342,7 @@ $router->add('GET', 'admin/users', function (Request $request, Response $respons
     $controller->showAdminUserPanel($request, $response);
 });
 
-// Маршрут для обновления поля пользователя 
-$router->add('POST', 'update-user-field', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\UserController();
-    $controller->updateUserFieldByAdmin($request, $response);
-});
+
 
 
 

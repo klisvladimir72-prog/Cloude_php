@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Таблица папок
 CREATE TABLE IF NOT EXISTS folders (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL, -- для удобства сравнения имени без приведения к lowercase 
     parent_id INT NULL, -- NULL для корневой папки
     user_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS folders (
 -- Таблица файлов
 CREATE TABLE IF NOT EXISTS files (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    original_name VARCHAR(255) NOT NULL,
+    original_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL, -- для удобства сравнения имени без приведения к lowercase
     filename VARCHAR(255) NOT NULL, -- имя файла на диске
     size BIGINT NOT NULL, -- размер в байтах
     mime_type VARCHAR(255) NOT NULL,

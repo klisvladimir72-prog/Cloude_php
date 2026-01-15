@@ -20,7 +20,7 @@ class ShareByGroupController
     public function __construct()
     {
         $this->shareService = App::getService('share_by_group_service');
-        $this->groupService = App::getService('group_service'); // Получаем GroupService для проверки
+        $this->groupService = App::getService('group_service');
     }
 
     /**
@@ -40,8 +40,8 @@ class ShareByGroupController
         $userId = $user->id;
 
         // Проверяем, является ли текущий пользователь администратором
-        if (!$userId || !$this->groupService->isAdmin($userId)) { // Используем GroupService для проверки
-            http_response_code(403); // Forbidden
+        if (!$userId || !$this->groupService->isAdmin($userId)) { 
+            http_response_code(403); 
             $response->setData(['error' => 'Доступ запрещен']);
             $response->sendJson();
             return;

@@ -23,4 +23,5 @@ class FileRepository extends BaseRepository
         self::$cache[$key] = $result;
         return $result;
     }
+
 }

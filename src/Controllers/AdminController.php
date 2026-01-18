@@ -53,7 +53,7 @@ class AdminController
         $usersList = $this->userRepo->getAllUsersExcludingAdmin();
 
         http_response_code(200);
-        $response->setData(['success' => 'true', 'usersList' => $usersList]);
+        $response->setData(['success' => true, 'usersList' => $usersList]);
         $response->sendJson();
         return;
     }
@@ -74,7 +74,7 @@ class AdminController
 
         if (!$userId) {
             http_response_code(500);
-            $response->setData(['success' => 'false', "message" => "id пользователя отсутствует."]);
+            $response->setData(['success' => false, "message" => "id пользователя отсутствует."]);
             $response->sendJson();
             return;
         }
@@ -83,14 +83,14 @@ class AdminController
 
         if (!$user) {
             http_response_code(400);
-            $response->setData(['success' => 'false', 'message' => "Пользователь с id '$userId' не найден."]);
+            $response->setData(['success' => false, 'message' => "Пользователь с id '$userId' не найден."]);
             $response->sendJson();
             return;
         }
 
 
         http_response_code(200);
-        $response->setData(['success' => 'true', 'user' => $user]);
+        $response->setData(['success' => true, 'user' => $user]);
         $response->sendJson();
     }
 
@@ -111,7 +111,7 @@ class AdminController
 
         if (!$userId) {
             http_response_code(500);
-            $response->setData(['success' => 'false', "message" => "id пользователя отсутствует."]);
+            $response->setData(['success' => false, "message" => "id пользователя отсутствует."]);
             $response->sendJson();
             return;
         }
@@ -120,10 +120,10 @@ class AdminController
 
         if ($success) {
             http_response_code(200);
-            $response->setData(['success' => "true", 'message' => 'Пользователь успешно удален.']);
+            $response->setData(['success' => true, 'message' => 'Пользователь успешно удален.']);
         } else {
             http_response_code(500);
-            $response->setData(['success' => 'false', 'message' => 'Ошибка при удалении пользователя.']);
+            $response->setData(['success' => false, 'message' => 'Ошибка при удалении пользователя.']);
         }
         $response->sendJson();
     }
@@ -144,7 +144,7 @@ class AdminController
 
         if (!$userId) {
             http_response_code(500);
-            $response->setData(['success' => 'false', "message" => "id пользователя отсутствует."]);
+            $response->setData(['success' => false, "message" => "id пользователя отсутствует."]);
             $response->sendJson();
             return;
         }
@@ -153,7 +153,7 @@ class AdminController
 
         if (!is_array($data) || empty($data)) {
             http_response_code(400);
-            $response->setData(['success' => 'false', 'message' => "Данные для обновления отсутсвуют."]);
+            $response->setData(['success' => false, 'message' => "Данные для обновления отсутствуют."]);
             $response->sendJson();
             return;
         }
@@ -162,7 +162,7 @@ class AdminController
         foreach ($data as $key => $value) {
             if (in_array($key, $forbiddenField)) {
                 http_response_code(403);
-                $response->setData(['success' => 'false', "message" => "Поля запрещены для редактирования."]);
+                $response->setData(['success' => false, "message" => "Поля запрещены для редактирования."]);
                 $response->sendJson();
                 return;
             }
@@ -173,7 +173,7 @@ class AdminController
                 $existingUser = $this->userRepo->findForAuth($value);
                 if ($existingUser && $existingUser['id'] != $userId) {
                     http_response_code(400);
-                    $response->setData(['success' => "false", 'message' => "Значение $key - $value уже используется."]);
+                    $response->setData(['success' => false, 'message' => "Значение $key - $value уже используется."]);
                     $response->sendJson();
                     return;
                 }
@@ -183,7 +183,7 @@ class AdminController
         $success = $this->userRepo->update($userId, $data);
         if ($success) {
             http_response_code(200);
-            $response->setData(['success' => 'true', 'message' => 'Данные пользователя успешно обновлены.']);
+            $response->setData(['success' => true, 'message' => 'Данные пользователя успешно обновлены.']);
         } else {
             http_response_code(500);
             $response->setData(['success' => $success, 'message' => 'Ошибка при обновлении данных.']);
@@ -208,7 +208,7 @@ class AdminController
 
         if (!$userId) {
             http_response_code(500);
-            $response->setData(['success' => 'false', "message" => "id пользователя отсутствует."]);
+            $response->setData(['success' => false, "message" => "id пользователя отсутствует."]);
             $response->sendJson();
             return;
         }
@@ -232,10 +232,10 @@ class AdminController
         $success = $this->userRepo->update($userId, ['password_hash' => $hashedPassword]);
         if ($success) {
             http_response_code(200);
-            $response->setData(['success' => "true", 'message' => 'Пароль успешно изменен.']);
+            $response->setData(['success' => true, 'message' => 'Пароль успешно изменен.']);
         } else {
             http_response_code(500);
-            $response->setData(['success' => "false", 'message' => 'Ошибка при смене пароля.']);
+            $response->setData(['success' => false, 'message' => 'Ошибка при смене пароля.']);
         }
         $response->sendJson();
     }

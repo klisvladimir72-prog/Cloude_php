@@ -88,7 +88,23 @@ class Request
     public function getQueryParam(string $key, $default = null): string
     {
         $queryString = $_SERVER['QUERY_STRING'] ?? '';
+        if ($_SERVER['QUERY_STRING'] === '') {
+            return '';
+        }
+
         parse_str($queryString, $queryParams);
         return $queryParams[$key] ?? $default;
+    }
+
+    public function getQueryParamsAll(): array
+    {
+        $queryString = $_SERVER['QUERY_STRING'] ?? '';
+        if ($queryString === '') {
+            return [];
+        }
+
+        parse_str($queryString, $queryParams);
+
+        return $queryParams;
     }
 }

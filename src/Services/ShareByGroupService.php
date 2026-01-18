@@ -61,16 +61,16 @@ class ShareByGroupService
      * @param int $sharedByUserId ID пользователя, который шарит
      * @return bool True, если успешно
      */
-    public function shareFile(int $fileId, int $groupId, string $permissions, int $sharedByUserId): bool
+    public function shareFile(int $fileId, int $groupId, string $permissions, int $sharedByUserId): array
     {
         try {
             $shareRepo = App::getService('shared_resource_by_group_repository');
 
-            $this->shareResource('file', $fileId, $groupId, $permissions, $sharedByUserId, $shareRepo);
-            return true;
+            $success = $this->shareResource('file', $fileId, $groupId, $permissions, $sharedByUserId, $shareRepo);
+            return ['success' => $success];
         } catch (\Exception $e) {
             error_log("ShareByGroupService::shareFile error: " . $e->getMessage());
-            return false;
+            return ['error' => $e->getMessage()];
         }
     }
 
@@ -86,7 +86,7 @@ class ShareByGroupService
      * @param object $shareRepo Репозиторий для работы с шарингом по группам
      * @return void
      */
-    private function shareResource(string $type, int $id, int $groupId, string $perms, int $sharedByUserId, $shareRepo): void
+    private function shareResource(string $type, int $id, int $groupId, string $perms, int $sharedByUserId, $shareRepo): array
     {
         // Проверяем, не шарили ли мы уже этот ресурс с этой группой
         // Используем метод findBy из BaseRepository, который знает имя таблицы
@@ -96,9 +96,14 @@ class ShareByGroupService
             'group_id' => $groupId
         ]);
 
+        $groupRepo = App::getService('user_groups');
+        $group = $groupRepo->find($groupRepo->getTable(), $groupId);
+        $groupName = $group['name'];
+
         if (!empty($existing)) {
             // Если шарили то обновляем уровень доступа
             $shareRepo->update($existing[0]['id'], ['permissions' => $perms]);
+            return ['message' => "Обновили уровень доступа для группы $groupName"];
         } else {
             // Если не шарили то создаем новую запись
             $shareRepo->create([
@@ -108,6 +113,7 @@ class ShareByGroupService
                 'permissions' => $perms,
                 'shared_by_user_id' => $sharedByUserId
             ]);
+            return ['success' => true];
         }
     }
 

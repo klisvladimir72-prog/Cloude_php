@@ -41,7 +41,7 @@
     <div class="form-section">
         <h3>Загрузить файл</h3>
         <form id="upload-form" enctype="multipart/form-data">
-            <input type="file" name="file" required>
+            <input type="file" name="file" >
             <input type="hidden" name="folder_id" value="<?= $currentFolder ? $currentFolder['id'] : '' ?>">
             <button type="submit">Загрузить</button>
         </form>
@@ -172,11 +172,11 @@
                         <td>
                             <?php if ($file['is_shared'] ?? false): ?>
                                 <!-- Общий файл -->
-                                <button class="btn-download" onclick="downloadFile('<?= $file['filename'] ?? '' ?>', '<?= $file['original_name'] ?? '' ?>')">Скачать</button>
+                                <button class="btn-download" onclick="downloadFile(<?= $file['id'] ?? ''?>)">Скачать</button>
                                 <span class="shared-label">🔒 Общий</span>
                             <?php else: ?>
                                 <!-- Свой файл -->
-                                <button class="btn-download" onclick="downloadFile('<?= $file['filename'] ?? '' ?>', '<?= $file['original_name'] ?? '' ?>')">Скачать</button>
+                                <button class="btn-download" onclick="downloadFile(<?= $file['id'] ?? ''?>)">Скачать</button>
                                 <button class="btn-share" onclick="shareFile(<?= $file['id'] ?>)">Поделиться</button>
                                 <button class="btn-delete" onclick="deleteFile(<?= $file['id'] ?>)">Удалить</button>
                             <?php endif; ?>
@@ -203,7 +203,8 @@
                 parent_id: parentId === 'null' ? null : parseInt(parentId)
             };
 
-            const response = await fetch('/create-folder', {
+
+            const response = await fetch('/directories/add', {
                 method: 'POST',
                 body: JSON.stringify(data),
                 headers: { 'Content-Type': 'application/json' }
@@ -220,7 +221,7 @@
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
-            const response = await fetch('/upload', {
+            const response = await fetch('/files/add', {
                 method: 'POST',
                 body: formData
             });
@@ -233,9 +234,8 @@
     // Функции для работы с файлами и папками
     async function deleteFile(fileId) {
         if (!confirm("Удалить файл?")) return;
-        const response = await fetch('/delete-file', {
+        const response = await fetch(`/files/remove?id=${fileId}`, {
             method: 'DELETE',
-            body: JSON.stringify({ file_id: fileId }),
             headers: { 'Content-Type': 'application/json' }
         });
         const data = await response.json();
@@ -245,9 +245,8 @@
 
     async function deleteFolder(folderId) {
         if (!confirm("Удалить папку и всё её содержимое?")) return;
-        const response = await fetch('/delete-folder', {
+        const response = await fetch(`/directories/delete?id=${folderId}`, {
             method: 'DELETE',
-            body: JSON.stringify({ folder_id: folderId }),
             headers: { 'Content-Type': 'application/json' }
         });
         const data = await response.json();
@@ -265,9 +264,19 @@
         if (!selection || (selection.users.length === 0 && selection.groups.length === 0)) return;
 
         // Отправляем на ОДИН маршрут, передавая и пользователей, и группы
-        const response = await fetch('/share-file', {
-            method: 'POST',
-            body: JSON.stringify({ file_id: fileId, user_ids: selection.users, group_ids: selection.groups }),
+        const params = new URLSearchParams();
+        params.append('id', fileId);
+
+        for(const userId of selection.users){
+            params.append('user_id[]', userId);
+        }
+
+        for(const groupId of selection.groups){
+            params.append('group_id[]', groupId);
+        }
+
+        const response = await fetch(`/files/share?${params.toString()}`, {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' }
         });
         const data = await response.json();
@@ -468,21 +477,48 @@
             });
         });
     }
-    // УДАЛЯЕМ ФУНКЦИЮ viewFile
-    // function viewFile(filename) {
-    //     window.open(`/view/${filename}`, '_blank');
-    // }
 
-    function downloadFile(filename, originalFilename) {
-        try {
-            const encodedFilename = encodeURIComponent(filename);
-            const downloadUrl = `/download?file=${encodedFilename}`;
-            window.open(downloadUrl, '_blank');
-        } catch (error) {
-            console.error('Ошибка при скачивании файла:', error);
-            alert('Произошла ошибка при скачивании файла. Попробуйте снова.');
+async function downloadFile(fileId) {
+    try {
+        const downloadUrl = `/files/download?id=${fileId}`;
+        const response = await fetch(downloadUrl, { method: 'GET' });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: 'Неизвестная ошибка' }));
+            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
+
+        // Получаем имя файла из заголовка Content-Disposition
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let fileName = 'downloaded_file';
+
+        if (contentDisposition) {
+            const fileNameMatch = contentDisposition.match(/filename\*=UTF-8''(.+)/);
+            if (fileNameMatch) {
+                fileName = decodeURIComponent(fileNameMatch[1]);
+            } else {
+                // Альтернативный способ — если filename="..."
+                const fallbackMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                if (fallbackMatch) {
+                    fileName = fallbackMatch[1];
+                }
+            }
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName; // Указываем имя файла явно
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Ошибка при скачивании файла:', error);
+        alert('Произошла ошибка при скачивании файла. Попробуйте снова.');
     }
+}
 </script>
 <style>
 /* Дополнительные стили для лучшей визуализации различий */

@@ -24,6 +24,10 @@ class GroupController
 
     /**
      * Отображает страницу управления группами для администратора.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
      */
     public function showAdminPanel(Request $request, Response $response)
     {
@@ -65,6 +69,10 @@ class GroupController
 
     /**
      * Обрабатывает запрос на создание новой группы.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
      */
     public function createGroup(Request $request, Response $response)
     {
@@ -107,6 +115,10 @@ class GroupController
 
     /**
      * Обрабатывает запрос на обновление имени группы.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
      */
     public function updateGroup(Request $request, Response $response)
     {
@@ -150,6 +162,10 @@ class GroupController
 
     /**
      * Обрабатывает запрос на удаление группы.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
      */
     public function deleteGroup(Request $request, Response $response)
     {
@@ -192,6 +208,10 @@ class GroupController
 
     /**
      * Обрабатывает запрос на добавление пользователя в группу.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
      */
     public function addUserToGroup(Request $request, Response $response)
     {
@@ -235,6 +255,10 @@ class GroupController
 
     /**
      * Обрабатывает запрос на удаление пользователя из группы.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
      */
     public function removeUserFromGroup(Request $request, Response $response)
     {

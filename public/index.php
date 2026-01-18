@@ -32,6 +32,8 @@ App::bind('shared_resource_by_group_repository', fn() => new \Src\Repositories\S
 App::bind('group_service', fn() => new \Src\Services\GroupService());
 App::bind('share_by_group_service', fn() => new \Src\Services\ShareByGroupService());
 App::bind('user_token_repository', fn() => new \Src\Repositories\UserTokenRepository());
+App::bind('user_groups', fn() => new \Src\Repositories\UserGroupRepository());
+App::bind('shared_resources_by_group', fn() => new \Src\Repositories\SharedResourceByGroupRepository());
 
 $request = new Request();
 $router = new Router();
@@ -42,18 +44,6 @@ $router->add('GET', '', function (Request $request, Response $response) {
     $controller->index($request, $response);
 });
 
-
-// Удаление папки
-$router->add('DELETE', 'delete-folder', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\FolderController();
-    $controller->delete($request, $response);
-});
-
-// Создание папки
-$router->add('POST', 'create-folder', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\FolderController();
-    $controller->create($request, $response);
-});
 
 // Авторизация
 $router->add('GET', 'login', function (Request $request, Response $response) {
@@ -155,7 +145,6 @@ $router->add('POST', 'admin/users/reset_password', function (Request $request, R
 
 
 // FILES 
-
 // Получение списка всех файлов
 $router->add('GET', 'files/list', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
@@ -186,37 +175,70 @@ $router->add('DELETE', 'files/remove', function (Request $request, Response $res
     $controller->delete($request, $response);
 });
 
+// Загрузка на сервер
+$router->add('POST', 'files/add', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\FileController();
+    $controller->upload($request, $response);
+});
+
+// Скачать файл по id 
+$router->add('GET', 'files/download', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\FileController();
+    $controller->download($request, $response);
+});
+
 // Логика для шаблона отображения файлов в приложении
 $router->add('GET', 'files', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
     $controller->index($request, $response);
 });
-
-// Загрузка
-$router->add('POST', 'upload', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\FileController();
-    $controller->upload($request, $response);
-});
-
-
-
-
-
-
 // ___________FILES
-$router->add('GET', 'download', function (Request $request, Response $response) {
-    $controller = new \Src\Controllers\FileController();
-    $controller->download($request, $response);
+
+
+// FOLDERS 
+// Создание папки
+$router->add('POST', 'directories/add', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\FolderController();
+    $controller->createFolder($request, $response);
 });
 
-$router->add('POST', 'share-file', function (Request $request, Response $response) {
+// Переименование папки
+$router->add('PUT', 'directories/rename', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\FolderController();
+    $controller->renameFolder($request, $response);
+});
+
+// Удаление папки по id
+$router->add('DELETE', 'directories/delete', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\FolderController();
+    $controller->deleteFolder($request, $response);
+});
+
+// Получение содержимого папки по id
+$router->add('GET', 'directories/get', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\FolderController();
+    $controller->getContentFolder($request, $response);
+});
+// __________FOLDERS
+
+
+// FILES/SHARE
+// Получение пользователей для расшаренного файла по id пользователя
+$router->add('GET', 'files/share', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\ShareController();
+    $controller->getUsersBySharedFile($request, $response);
+});
+
+// Шаринг по id файла пользователям(группам) по их id[] 
+$router->add('PUT', 'files/share', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\ShareController();
     $controller->shareFile($request, $response);
 });
 
-$router->add('POST', 'share-folder', function (Request $request, Response $response) {
+// Удалить шаринг по id файла пользователям(группам) по их id[] 
+$router->add('DELETE', 'files/share', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\ShareController();
-    $controller->shareFolder($request, $response);
+    $controller->removeShareFile($request, $response);
 });
 
 $router->add('GET', 'shared', function (Request $request, Response $response) {
@@ -224,40 +246,18 @@ $router->add('GET', 'shared', function (Request $request, Response $response) {
     $controller->shared($request, $response);
 });
 
+// _________FILES/SHARE
 
-$router->add('GET', 'get-shared-users/file/{fileId}', function (Request $request, Response $response) {
-    $matches = $request->getMatches();
-    $fileId = $matches['fileId'] ?? null;
 
-    if (!$fileId) {
-        http_response_code(400);
-        $response->setData(['error' => 'ID файла не указан']);
-        $response->sendJson();
-        return;
-    }
 
-    $authResult = AuthMiddleware::handle($request, $response);
-    if (!$authResult) {
-        http_response_code(401);
-        $response->sendHtml('login.php');
-        return;
-    }
 
-    $sharedFileRepo = App::getService('shared_file_repository');
-    $sharedFiles = $sharedFileRepo->findBy('shared_files', ['file_id' => $fileId]);
 
-    $userIds = [];
-    foreach ($sharedFiles as $sharedFile) {
-        $userRepo = App::getService('user_repository');
-        $user = $userRepo->findBy($userRepo->getTable(), ['email' => $sharedFile['shared_with_email']]);
-        if ($user) {
-            $userIds[] = $user['id'];
-        }
-    }
 
-    $response->setData(['user_ids' => $userIds]);
-    $response->sendJson();
+$router->add('POST', 'share-folder', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\ShareController();
+    $controller->shareFolder($request, $response);
 });
+
 
 $router->add('GET', 'get-shared-users/folder/{folderId}', function (Request $request, Response $response) {
     $matches = $request->getMatches();

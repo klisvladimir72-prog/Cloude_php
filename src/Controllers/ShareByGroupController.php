@@ -25,6 +25,10 @@ class ShareByGroupController
 
     /**
      * Обрабатывает запрос на шаринг ресурса (файл или папка) с группой.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
      */
     public function shareResource(Request $request, Response $response)
     {
@@ -40,8 +44,8 @@ class ShareByGroupController
         $userId = $user->id;
 
         // Проверяем, является ли текущий пользователь администратором
-        if (!$userId || !$this->groupService->isAdmin($userId)) { 
-            http_response_code(403); 
+        if (!$userId || !$this->groupService->isAdmin($userId)) {
+            http_response_code(403);
             $response->setData(['error' => 'Доступ запрещен']);
             $response->sendJson();
             return;

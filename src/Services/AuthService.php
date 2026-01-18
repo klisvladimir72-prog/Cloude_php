@@ -127,4 +127,28 @@ class AuthService
     {
         return $this->userTokenRepo->deleteAllForUser($userId);
     }
+
+    public function setTokenCookie(string $token): void
+    {
+        // Устанавливаем HTTP-only cookie
+        // Срок действия такой же как и бд 
+        setcookie('auth_token', $token, [
+            'expires' => time() + (1 * 24 * 60 * 60), //1 день
+            'path' => '/',
+            'secure' => true, // при использовании HTTPS
+            'httponly' => true,
+            'samesite' => 'Strict'
+        ]);
+    }
+
+    public function unsetTokenCookie(): void
+    {
+        setcookie('auth_token', '', [
+            'expires' => time() - 3600, // Устанавливаем в прошлое 
+            'path' => '/',
+            'secure' => true, // при использовании HTTPS
+            'httponly' => true,
+            'samesite' => 'Strict'
+        ]);
+    }
 }

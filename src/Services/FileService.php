@@ -3,6 +3,8 @@
 namespace Src\Services;
 
 use Src\Core\App;
+use Src\Models\User;
+use Src\Models\File;
 
 class FileService
 {
@@ -59,7 +61,7 @@ class FileService
         'video/3gpp2',            // .3g2 — улучшенная версия 3GPP
     ];
 
-    public function handleUpload(array $data, array $files, int $userId, ?int $folderId = null)
+    public function handleUpload(array $files, int $userId, ?int $folderId = null)
     {
         try {
             $file = $files['file'] ?? null;
@@ -110,7 +112,17 @@ class FileService
         }
     }
 
-    public function deleteFile(int $fileId, int $userId, int $userRole): array
+    public function isPermissions(User $user, array $file): bool
+    {
+
+        if ($file['user_id'] !== $user->id && $user->role !== 1) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function deleteFile(int $fileId, User $user): array
     {
         try {
             $repo = App::getService('file_repository');
@@ -120,7 +132,9 @@ class FileService
                 return ['success' => false, "message" => "Файл не найден."];
             }
 
-            if ($file['user_id'] !== $userId && $userRole !== 1) {
+
+            $isOwner = $this->isPermissions($user, $file);
+            if (!$isOwner) {
                 return ['success' => false, 'message' => 'Нет прав на удаление файла.'];
             }
 

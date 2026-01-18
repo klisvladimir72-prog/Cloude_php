@@ -9,19 +9,46 @@ use Src\Middleware\AuthMiddleware;
 
 class AuthController
 {
+    private $authService;
+
+    public function __construct()
+    {
+        $this->authService = App::getService('auth_service');
+    }
+
+    /**
+     * Перенаправление на форму входа
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function loginForm(Request $request, Response $response)
     {
         $response->sendHtml('login.php');
     }
 
+    /**
+     * Перенаправление на форму регистрации
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function registerForm(Request $request, Response $response)
     {
         $response->sendHtml('register.php');
     }
 
+    /**
+     * Авторизация пользователя 
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function login(Request $request, Response $response)
     {
-        $authService = App::getService('auth_service');
         $data = $request->getData();
 
 
@@ -29,12 +56,12 @@ class AuthController
         $emailOrLogin = $data['email_or_login'] ?? '';
         $password = $data['password'];
 
-        $user = $authService->authenticate($emailOrLogin, $password);
+        $user = $this->authService->authenticate($emailOrLogin, $password);
 
         if ($user) {
             // Успешная аутентификация 
-            $newToken = $authService->generateTokenForUser($user->id);
-            $this->setTokenCookie($newToken);
+            $newToken = $this->authService->generateTokenForUser($user->id);
+            $this->authService->setTokenCookie($newToken);
 
             if ($newToken) {
                 $response->setData([
@@ -61,6 +88,13 @@ class AuthController
         $response->sendJson();
     }
 
+    /**
+     * Регистрация пользователя
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function register(Request $request, Response $response)
     {
         $data = $request->getData();
@@ -75,8 +109,7 @@ class AuthController
             return;
         }
 
-        $authService = App::getService('auth_service');
-        $success = $authService->register($email, $password, $login);
+        $success = $this->authService->register($email, $password, $login);
 
         if ($success) {
             // После успешной регистрации — не логиним пользователя и не возвращаем токен
@@ -89,7 +122,13 @@ class AuthController
         $response->sendJson();
     }
 
-
+    /**
+     * Выход пользователя
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function logout(Request $request, Response $response)
     {
 
@@ -105,47 +144,31 @@ class AuthController
                     $authService->removeTokenForUser($user->id);
                 } else {
                     http_response_code(500);
-                    echo json_encode(['success' => 'false', 'message' => 'Ошибка при выходе из системы.']);
+                    echo json_encode(['success' => false, 'message' => 'Ошибка при выходе из системы.']);
                     exit();
                 }
             }
 
-            $this->unsetTokenCookie();
+            $this->authService->unsetTokenCookie();
 
             http_response_code(200);
-            echo json_encode(['success' => 'true', 'message' => 'Вы успешно вышли из системы.']);
+            echo json_encode(['success' => true, 'message' => 'Вы успешно вышли из системы.']);
             exit();
         } catch (\Exception $e) {
             http_response_code(500);
-            echo json_encode(['success' => 'false', 'message' => 'Ошибка при выходе из системы.']);
+            echo json_encode(['success' => false, 'message' => 'Ошибка при выходе из системы.']);
             exit();
         }
     }
 
-    private function setTokenCookie(string $token): void
-    {
-        // Устанавливаем HTTP-only cookie
-        // Срок действия такой же как и бд 
-        setcookie('auth_token', $token, [
-            'expires' => time() + (1 * 24 * 60 * 60), //1 день
-            'path' => '/',
-            'secure' => true, // при использовании HTTPS
-            'httponly' => true,
-            'samesite' => 'Strict'
-        ]);
-    }
 
-    private function unsetTokenCookie(): void
-    {
-        setcookie('auth_token', '', [
-            'expires' => time() - 3600, // Устанавливаем в прошлое 
-            'path' => '/',
-            'secure' => true, // при использовании HTTPS
-            'httponly' => true,
-            'samesite' => 'Strict'
-        ]);
-    }
-
+    /**
+     * Отображение формы для смены пароля
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function showChangePasswordForm(Request $request, Response $response)
     {
         // Проверяем токен через AuthMiddleware
@@ -167,6 +190,13 @@ class AuthController
         ]);
     }
 
+    /**
+     * Метод для смены пароля пользователем
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function changePassword(Request $request, Response $response)
     {
         // Проверяем токен через AuthMiddleware

@@ -35,25 +35,36 @@ class FileController
         return $authResult['user'];
     }
 
-    /**Возвращает список всех файлов */
+    /**
+     * Возвращает список всех файлов 
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function getFilesList(Request $request, Response $response)
     {
         try {
             $filesList = $this->fileRepo->findAll($this->fileRepo->getTable());
 
             http_response_code(200);
-            $response->setData(['success' => 'true', 'filesList' => $filesList]);
+            $response->setData(['success' => true, 'filesList' => $filesList]);
             $response->sendJson();
             return;
         } catch (\Exception $e) {
             http_response_code(500);
-            $response->setData(['success' => 'false', 'message' => $e->getMessage()]);
+            $response->setData(['success' => false, 'message' => $e->getMessage()]);
             $response->sendJson();
             return;
         }
     }
 
-    /**Возвращает список всех файлов пользователя */
+    /**
+     * Возвращает список всех файлов пользователя 
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function getFilesListById(Request $request, Response $response)
     {
         try {
@@ -61,7 +72,7 @@ class FileController
 
             if (!$user_id) {
                 http_response_code(500);
-                $response->setData(['success' => 'false', "message" => "id пользователя отсутствует."]);
+                $response->setData(['success' => false, "message" => "id пользователя отсутствует."]);
                 $response->sendJson();
                 return;
             }
@@ -69,18 +80,24 @@ class FileController
             $filesList = $this->fileRepo->findBy($this->fileRepo->getTable(), ["user_id" => $user_id]);
 
             http_response_code(200);
-            $response->setData(['success' => 'true', 'filesList' => $filesList]);
+            $response->setData(['success' => true, 'filesList' => $filesList]);
             $response->sendJson();
             return;
         } catch (\Exception $e) {
             http_response_code(500);
-            $response->setData(['success' => 'false', "message" => $e->getMessage()]);
+            $response->setData(['success' => false, "message" => $e->getMessage()]);
             $response->sendJson();
             return;
         }
     }
 
-    /**Возвращает данные о файле */
+    /**
+     * Возвращает данные о файле
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function getFileByFileId(Request $request, Response $response)
     {
         try {
@@ -88,7 +105,7 @@ class FileController
 
             if (!$file_id) {
                 http_response_code(500);
-                $response->setData(['success' => 'false', "message" => "id файла отсутствует."]);
+                $response->setData(['success' => false, "message" => "id файла отсутствует."]);
                 $response->sendJson();
                 return;
             }
@@ -96,18 +113,24 @@ class FileController
             $file = $this->fileRepo->findBy($this->fileRepo->getTable(), ["id" => $file_id]);
 
             http_response_code(200);
-            $response->setData(['success' => 'true', 'file' => $file]);
+            $response->setData(['success' => true, 'file' => $file]);
             $response->sendJson();
             return;
         } catch (\Exception $e) {
             http_response_code(500);
-            $response->setData(['success' => 'false', "message" => $e->getMessage()]);
+            $response->setData(['success' => false, "message" => $e->getMessage()]);
             $response->sendJson();
             return;
         }
     }
 
-
+    /**
+     * Метод для работы приложения(не для REST/API)
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function index(Request $request, Response $response)
     {
         // Проверяем токен 
@@ -428,7 +451,12 @@ class FileController
         ]);
     }
 
-    // Вспомогательный метод для получения email пользователя по ID
+    /**
+     * Вспомогательный метод для получения email пользователя по ID
+     *
+     * @param integer $id
+     * @return string
+     */
     private function getUserEmailById(int $id): string
     {
         $userRepo = App::getService('user_repository');
@@ -507,7 +535,13 @@ class FileController
         return $breadcrumbs;
     }
 
-    /**Загрузка файла на сервер */
+    /**
+     * Загрузка файла на сервер
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function upload(Request $request, Response $response)
     {
         $user = $this->authenticateUser($request, $response);
@@ -521,14 +555,30 @@ class FileController
                 $folderId = null;
             }
 
-            $service = App::getService('file_service');
-            $result = $service->handleUpload($data, $_FILES, $user->id, $folderId);
+            if (!$_FILES['file']['name']) {
+                http_response_code(400);
+                $response->setData(['success' => false, 'message' => "Для загрузки обязателен файл."]);
+                $response->sendJson();
+                return;
+            }
+
+            $fileName = $_FILES['file']['name'];
+
+            if (!$this->fileService->isUniqueFileNameByUser($user->id, $fileName)) {
+                http_response_code(409);
+                $response->setData(['success' => false, 'message' => "Файл с именем $fileName уже существует."]);
+                $response->sendJson();
+                return;
+            }
+
+            $result = $this->fileService->handleUpload($_FILES, $user->id, $folderId);
 
             if ($result['success']) {
-                $response->setData($result, ['data' => $data]);
+                http_response_code(200);
+                $response->setData(['success' => true, 'message' => "Файл $fileName успешно загружен."]);
             } else {
-                http_response_code(400);
-                $response->setData($result);
+                http_response_code(500);
+                $response->setData(['success' => false, 'message' => 'Ошибка загрузки файла на сервер.']);
             }
             $response->sendJson();
         } catch (\Throwable $e) {
@@ -542,7 +592,13 @@ class FileController
         }
     }
 
-    /**Переименование файла */
+    /**
+     * Переименование файла
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function renameFile(Request $request, Response $response)
     {
         $user = $this->authenticateUser($request, $response);
@@ -563,6 +619,16 @@ class FileController
             if (!$fileNewName) {
                 http_response_code(400);
                 $response->setData(['success' => false, 'message' => 'Новое имя файла не может быть пустым.']);
+                $response->sendJson();
+                return;
+            }
+
+            $file = $this->fileRepo->find($this->fileRepo->getTable(), $fileId);
+
+            $isOwner = $this->fileService->isPermissions($user, $file);
+            if (!$isOwner) {
+                http_response_code(409);
+                $response->setData(['success' => false, 'message' => "Нет прав на удаление файла."]);
                 $response->sendJson();
                 return;
             }
@@ -603,69 +669,73 @@ class FileController
         }
     }
 
-    // Метод для скачивания файла (проверка доступа)
+    /**
+     * Метод для скачивания файла
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function download(Request $request, Response $response)
     {
-        $user = $this->authenticateUser($request, $response);
-        if (!$user) return;
+        try {
+            $user = $this->authenticateUser($request, $response);
+            if (!$user) return;
 
-        $userId = $user->id;
+            $fileId = $request->getQueryParam('id');
 
-        // Получаем имя файла из GET-параметра
-        $fileName = $_GET['file'] ?? '';
+            if (empty($fileId) || !$fileId) {
+                http_response_code(400);
+                $response->setData(['success' => false, 'message' => 'ID файла не передано.']);
+                $response->sendJson();
+                return;
+            }
 
-        if (empty($fileName)) {
-            http_response_code(400);
-            $response->setData(['error' => 'Имя файла обязательно']);
+            $file = $this->fileRepo->findBy($this->fileRepo->getTable(), ['id' => $fileId]);
+            if (empty($file)) {
+                http_response_code(404);
+                $response->setData(['success' => false, 'message' => 'Файл не найден на сервере.']);
+                $response->sendJson();
+                return;
+            }
+
+            // Отправляем файл
+            $filePath = realpath(__DIR__ . '/../../uploads/') . '/' . $file[0]['filename'];
+            if (!file_exists($filePath)) {
+                http_response_code(404);
+                $response->setData(['success' => false, 'message' => 'Файл не найден на сервере']);
+                $response->sendJson();
+                return;
+            }
+
+            $fileName = basename($file[0]['original_name']);
+
+            header('Content-Type: ' . $file[0]['mime_type']);
+            header("Content-Disposition: attachment; filename=\"$fileName\"; filename*=UTF-8''" . rawurlencode($fileName));
+            header('Content-Length: ' . filesize($filePath));
+            readfile($filePath);
+            exit();
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            $response->setData([
+                'success' => false,
+                'message' => 'Внутренняя ошибка сервера.',
+                'debug' => $e->getMessage()
+            ]);
             $response->sendJson();
             return;
         }
-
-        $fileRepo = App::getService('file_repository');
-        $sharedFileRepo = App::getService('shared_file_repository');
-        $shareByGroupService = App::getService('share_by_group_service');
-
-        // Получаем файл по имени
-        $files = $fileRepo->findBy('files', ['filename' => $fileName]);
-        if (empty($files)) {
-            http_response_code(404);
-            $response->setData(['error' => 'Файл не найден']);
-            $response->sendJson();
-            return;
-        }
-
-        // Берем первый файл с таким именем
-        $file = $files[0];
-
-        // Проверяем доступ: владелец или расшарен
-        $isOwner = $file['user_id'] === $userId;
-        $isSharedToMeByEmail = !empty($sharedFileRepo->findBy('shared_files', ['file_id' => $file['id'], 'shared_with_email' => $user->email]));
-        $isSharedToMeByGroup = $shareByGroupService->hasAccessByGroup($userId, 'file', $file['id']);
-
-        if (!($isOwner || $isSharedToMeByEmail || $isSharedToMeByGroup)) {
-            http_response_code(403);
-            $response->setData(['error' => 'Нет доступа к файлу']);
-            $response->sendJson();
-            return;
-        }
-
-        // Отправляем файл
-        $filePath = __DIR__ . '/../../uploads/' . $file['filename'];
-        if (!file_exists($filePath)) {
-            http_response_code(404);
-            $response->setData(['error' => 'Файл не найден на сервере']);
-            $response->sendJson();
-            return;
-        }
-
-        header('Content-Type: application/octet-stream');
-        header('Content-Disposition: attachment; filename="' . basename($file['original_name']) . '"');
-        header('Content-Length: ' . filesize($filePath));
-        readfile($filePath);
-        exit(); // Важно: завершаем выполнение после отправки файла
     }
 
-    /**Удаление файла с проверкой на права (admin может) */
+    /**
+     * Удаление файла с проверкой на права (admin может).
+     * 
+     * Удаляет все шаринги.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function delete(Request $request, Response $response)
     {
         $user = $this->authenticateUser($request, $response);
@@ -681,8 +751,7 @@ class FileController
                 return;
             }
 
-            $service = App::getService('file_service');
-            $result = $service->deleteFile($fileId, $user->id, $user->role);
+            $result = $this->fileService->deleteFile($fileId, $user);
 
             if ($result['success']) {
                 $response->setData(['success' => true, 'message' => $result['message']]);
@@ -703,7 +772,13 @@ class FileController
         }
     }
 
-
+    /**
+     * Метод для шаринга файлов.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return void
+     */
     public function shared(Request $request, Response $response)
     {
         $user = $this->authenticateUser($request, $response);

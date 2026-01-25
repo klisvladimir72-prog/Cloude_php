@@ -46,21 +46,35 @@ class AuthService
      * @param string $login Логин пользователя
      * @return bool True, если регистрация успешна
      */
-    public function register(string $email, string $password, string $login): bool
+    public function register(string $email, string $password, string $login): array
     {
         // Проверяем, существует ли уже пользователь с таким email или login
         // Используем метод findByEmailOrLogin из UserRepository
         if ($this->userRepo->findByEmailOrLogin($email, $login)) {
-            return false; // Пользователь уже существует
+            return ['success' => false, 'message' => 'Пользователь с таким email(login) уже существует.']; // Пользователь уже существует
+        }
+
+        if (strlen($password) < 6) {
+            return ['success' => false, 'message' => 'Пароль должен содержать не менее 6 символов.'];
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'message' => 'Email не валиден.'];
         }
 
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        return $this->userRepo->create([
+        $success = $this->userRepo->create([
             'email' => $email,
             'login' => $login, // Сохраняем login
             'password_hash' => $hashedPassword,
             'role' => 0,
         ]);
+
+        if ($success) {
+            return  ['success' => true, 'message' => 'Пользователь успешно зарегистрирован.'];
+        } else {
+            return ['success' => false, 'message' => 'На сервере что-то пошло не так.'];
+        }
     }
 
     /**

@@ -16,11 +16,13 @@ use Src\Services\AuthService;
 use Src\Services\FileService;
 use Src\Services\FolderService;
 use Src\Middleware\AuthMiddleware;
+use Src\Repositories\PasswordResetRepository;
 
 // --- Регистрируем существующие и новые сервисы в DI-контейнере ---
 App::bind('user_repository', fn() => new UserRepository());
 App::bind('file_repository', fn() => new FileRepository());
 App::bind('folder_repository', fn() => new FolderRepository());
+App::bind('password_reset_repository', fn() => new PasswordResetRepository());
 App::bind('auth_service', fn() => new AuthService());
 App::bind('file_service', fn() => new FileService());
 App::bind('folder_service', fn() => new FolderService());
@@ -66,77 +68,85 @@ $router->add('POST', 'register', function (Request $request, Response $response)
     $controller->register($request, $response);
 });
 
-$router->add('GET', 'logout', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'logout', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\AuthController();
     $controller->logout($request, $response);
 });
 
+$router->add('GET', 'reset_password', function (Request $request, Response $response) {
+    $controller = new \Src\Controllers\PasswordResetController();
+    return $controller->requestResetPassword($request, $response);
+});
+
+// ______Авторизация 
 
 
 
 // Маршрут для отображения формы смены пароля  (доступен любому аутентифицированному пользователю)
-$router->add('GET', 'change_password', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'change_password', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\AuthController();
     $controller->showChangePasswordForm($request, $response);
 });
 
 // Маршрут для смены пароля (доступен любому аутентифицированному пользователю)
-$router->add('POST', 'change_password', function (Request $request, Response $response) {
+$router->addSecureByAuth('POST', 'change_password', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\AuthController();
     $controller->changePassword($request, $response);
 });
 
 
 // USERS 
-$router->add('GET', 'get-users', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'get-users', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\ShareController();
     $controller->getUsers($request, $response);
 });
 
-$router->add('GET', 'users/list', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'users/list', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\UserController();
     $controller->getUsersList($request, $response);
 });
 
-$router->add('GET', 'users/search', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'users/search/{email}', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\UserController();
     $controller->getUserByEmail($request, $response);
 });
 
-$router->add('GET', 'users/get', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'users/get/{id}', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\UserController();
     $controller->getUserById($request, $response);
 });
 
-$router->add('PUT', 'users/update', function (Request $request, Response $response) {
+$router->addSecureByAuth('PUT', 'users/update', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\UserController();
     $controller->updateUserFieldByUser($request, $response);
 });
+
+
 // ____________USERS
 
 // ADMIN
-$router->add('GET', 'admin/users/list', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'admin/users/list', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\AdminController();
     $controller->getUsersList($request, $response);
 });
 
-$router->add('GET', 'admin/users/get', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'admin/users/get/{id}', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\AdminController();
     $controller->getUserById($request, $response);
 });
 
-$router->add('DELETE', 'admin/users/delete', function (Request $request, Response $response) {
+$router->addSecureByAuth('DELETE', 'admin/users/delete/{id}', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\AdminController();
     $controller->deleteUser($request, $response);
 });
 
-$router->add('PUT', 'admin/users/update', function (Request $request, Response $response) {
+$router->addSecureByAuth('PUT', 'admin/users/update/{id}', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\AdminController();
     $controller->updateUserField($request, $response);
 });
 
 // Сброс пороля (user123) или задать новый пароль
-$router->add('POST', 'admin/users/reset_password', function (Request $request, Response $response) {
+$router->addSecureByAuth('POST', 'admin/users/reset_password/{id}', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\AdminController();
     $controller->resetUserPassword($request, $response);
 });
@@ -146,49 +156,49 @@ $router->add('POST', 'admin/users/reset_password', function (Request $request, R
 
 // FILES 
 // Получение списка всех файлов
-$router->add('GET', 'files/list', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'files/list', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
     $controller->getFilesList($request, $response);
 });
 
 // Получение списка всех файлов пользователя
-$router->add('GET', 'files/list/get', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'files/list/get/{id}', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
     $controller->getFilesListById($request, $response);
 });
 
 // Получение данных о файле по id файла 
-$router->add('GET', 'files/get', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'files/get/{id}', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
     $controller->getFileByFileId($request, $response);
 });
 
 // Изменение имени файла
-$router->add('PUT', 'files/rename', function (Request $request, Response $response) {
+$router->addSecureByAuth('PUT', 'files/rename', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
     $controller->renameFile($request, $response);
 });
 
 // Удаление файла по id 
-$router->add('DELETE', 'files/remove', function (Request $request, Response $response) {
+$router->addSecureByAuth('DELETE', 'files/remove/{id}', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
     $controller->delete($request, $response);
 });
 
 // Загрузка на сервер
-$router->add('POST', 'files/add', function (Request $request, Response $response) {
+$router->addSecureByAuth('POST', 'files/add', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
     $controller->upload($request, $response);
 });
 
 // Скачать файл по id 
-$router->add('GET', 'files/download', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'files/download/{id}', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
     $controller->download($request, $response);
 });
 
 // Логика для шаблона отображения файлов в приложении
-$router->add('GET', 'files', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'files', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
     $controller->index($request, $response);
 });
@@ -197,25 +207,25 @@ $router->add('GET', 'files', function (Request $request, Response $response) {
 
 // FOLDERS 
 // Создание папки
-$router->add('POST', 'directories/add', function (Request $request, Response $response) {
+$router->addSecureByAuth('POST', 'directories/add', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FolderController();
     $controller->createFolder($request, $response);
 });
 
 // Переименование папки
-$router->add('PUT', 'directories/rename', function (Request $request, Response $response) {
+$router->addSecureByAuth('PUT', 'directories/rename', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FolderController();
     $controller->renameFolder($request, $response);
 });
 
 // Удаление папки по id
-$router->add('DELETE', 'directories/delete', function (Request $request, Response $response) {
+$router->addSecureByAuth('DELETE', 'directories/delete/{id}', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FolderController();
     $controller->deleteFolder($request, $response);
 });
 
 // Получение содержимого папки по id
-$router->add('GET', 'directories/get', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'directories/get/{id}', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FolderController();
     $controller->getContentFolder($request, $response);
 });
@@ -223,25 +233,25 @@ $router->add('GET', 'directories/get', function (Request $request, Response $res
 
 
 // FILES/SHARE
-// Получение пользователей для расшаренного файла по id пользователя
-$router->add('GET', 'files/share', function (Request $request, Response $response) {
+// Получение пользователей для расшаренного файла по id 
+$router->addSecureByAuth('GET', 'files/share/{id}', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\ShareController();
     $controller->getUsersBySharedFile($request, $response);
 });
 
-// Шаринг по id файла пользователям(группам) по их id[] 
-$router->add('PUT', 'files/share', function (Request $request, Response $response) {
+// Шаринг по id файла пользователям(группам) по их id
+$router->addSecureByAuth('PUT', 'files/share/{id}/{user_id}', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\ShareController();
     $controller->shareFile($request, $response);
 });
 
 // Удалить шаринг по id файла пользователям(группам) по их id[] 
-$router->add('DELETE', 'files/share', function (Request $request, Response $response) {
+$router->addSecureByAuth('DELETE', 'files/share/{id}/{user_id}', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\ShareController();
     $controller->removeShareFile($request, $response);
 });
 
-$router->add('GET', 'shared', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'shared', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\FileController();
     $controller->shared($request, $response);
 });
@@ -253,13 +263,13 @@ $router->add('GET', 'shared', function (Request $request, Response $response) {
 
 
 
-$router->add('POST', 'share-folder', function (Request $request, Response $response) {
+$router->addSecureByAuth('POST', 'share-folder', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\ShareController();
     $controller->shareFolder($request, $response);
 });
 
 
-$router->add('GET', 'get-shared-users/folder/{folderId}', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'get-shared-users/folder/{folderId}', function (Request $request, Response $response) {
     $matches = $request->getMatches();
     $folderId = $matches['folderId'] ?? null;
 
@@ -295,49 +305,49 @@ $router->add('GET', 'get-shared-users/folder/{folderId}', function (Request $req
 // ---
 
 // Маршрут для отображения админ-панели 
-$router->add('GET', 'admin/groups', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'admin/groups', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\ShareController();
     $controller->showAdminPanel($request, $response);
 });
 
 // Маршруты для CRUD групп 
-$router->add('POST', 'create-group', function (Request $request, Response $response) {
+$router->addSecureByAuth('POST', 'create-group', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\GroupController();
     $controller->createGroup($request, $response);
 });
 
-$router->add('POST', 'update-group', function (Request $request, Response $response) {
+$router->addSecureByAuth('POST', 'update-group', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\GroupController();
     $controller->updateGroup($request, $response);
 });
 
-$router->add('POST', 'delete-group', function (Request $request, Response $response) {
+$router->addSecureByAuth('POST', 'delete-group', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\GroupController();
     $controller->deleteGroup($request, $response);
 });
 
-$router->add('POST', 'add-user-to-group', function (Request $request, Response $response) {
+$router->addSecureByAuth('POST', 'add-user-to-group', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\GroupController();
     $controller->addUserToGroup($request, $response);
 });
 
-$router->add('POST', 'remove-user-from-group', function (Request $request, Response $response) {
+$router->addSecureByAuth('POST', 'remove-user-from-group', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\GroupController();
     $controller->removeUserFromGroup($request, $response);
 });
 
-$router->add('POST', 'share-resource-by-group', function (Request $request, Response $response) {
+$router->addSecureByAuth('POST', 'share-resource-by-group', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\ShareByGroupController();
     $controller->shareResource($request, $response);
 });
 
-$router->add('GET', 'get-groups', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'get-groups', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\ShareController();
     $controller->getGroups($request, $response);
 });
 
 // Маршрут для отображения админ-панели пользователей
-$router->add('GET', 'admin/users', function (Request $request, Response $response) {
+$router->addSecureByAuth('GET', 'admin/users', function (Request $request, Response $response) {
     $controller = new \Src\Controllers\UserController();
     $controller->showAdminUserPanel($request, $response);
 });
@@ -352,7 +362,7 @@ $method = $request->getMethod();
 
 // Проверяем, является ли запрос статическим файлом (например, css, js, img)
 // Если маршрут не начинается с известных префиксов ваших API, и файл существует, отдаем его
-$publicPath = __DIR__ . '/../public/' . $route; // Предполагаем, что статика в /public/
+$publicPath = __DIR__ . '/../public/' . $route;
 if (
     $method === 'GET' && !in_array($route, ['', 'files', 'upload', 'delete-file', 'delete-folder', 'create-folder', 'login', 'register', 'logout', 'download', 'view', 'share-file']) // список ваших API маршрутов
     && file_exists($publicPath) && is_file($publicPath)
@@ -366,11 +376,4 @@ if (
 }
 
 // Если не статический файл, обрабатываем через Router
-$response = $router->processRequest($request);
-
-// Ответ по умолчанию, если маршрут не найден и не был отправлен заголовок
-if (http_response_code() === 404) {
-    header('Content-Type: application/json');
-    echo json_encode(['error' => 'Маршрут не найден']);
-    exit();
-}
+$router->processRequest($request);

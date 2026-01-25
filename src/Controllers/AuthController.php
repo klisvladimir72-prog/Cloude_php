@@ -111,13 +111,13 @@ class AuthController
 
         $success = $this->authService->register($email, $password, $login);
 
-        if ($success) {
+        if ($success['success']) {
             // После успешной регистрации — не логиним пользователя и не возвращаем токен
             // Логин происходит отдельно через /login
-            $response->setData(['success' => true, 'message' => 'Пользователь зарегистрирован. Пожалуйста, войдите.', 'redirect' => '/login']);
+            $response->setData(['success' => true, 'message' => $success['message']]);
         } else {
             http_response_code(400);
-            $response->setData(['success' => false, 'message' => 'Пользователь с таким email или login уже существует']);
+            $response->setData(['success' => false, 'message' => $success['message']]);
         }
         $response->sendJson();
     }
@@ -144,7 +144,8 @@ class AuthController
                     $authService->removeTokenForUser($user->id);
                 } else {
                     http_response_code(500);
-                    echo json_encode(['success' => false, 'message' => 'Ошибка при выходе из системы.']);
+                    $response->setData(['success' => false, 'message' => 'Ошибка при выходе из системы.']);
+                    $response->sendJson();
                     exit();
                 }
             }
@@ -152,11 +153,13 @@ class AuthController
             $this->authService->unsetTokenCookie();
 
             http_response_code(200);
-            echo json_encode(['success' => true, 'message' => 'Вы успешно вышли из системы.']);
+            $response->setData(['success' => true, 'message' => 'Вы успешно вышли из системы.']);
+            $response->sendJson();
             exit();
         } catch (\Exception $e) {
             http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Ошибка при выходе из системы.']);
+            $response->setData(['success' => false, 'message' => 'Ошибка при выходе из системы.']);
+            $response->sendJson();
             exit();
         }
     }

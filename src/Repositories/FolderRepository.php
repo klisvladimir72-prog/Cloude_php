@@ -6,8 +6,8 @@ class FolderRepository extends BaseRepository
 {
     protected string $table = 'folders';
 
-    // public function getTable(): string
-    // {
-    //     return $this->table;
-    // }
+    public function getTable(): string
+    {
+        return $this->table;
+    }
 }

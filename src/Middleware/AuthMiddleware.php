@@ -21,18 +21,14 @@ class AuthMiddleware
 
         if (!$token) {
             // Токен не найден в заголовке 
-            http_response_code(401);
-            $response->sendHtml('login.php');
+            return ['success' => false, 'error' => 'Пользователь не авторизован.'];
         }
 
         $user = $authService->getUserByToken($token);
 
         if (!$user) {
             // Токен недействителен 
-            http_response_code(401);
-            $response->setData(['error' => 'Неверный или просроченный токен.']);
-            $response->sendJson();
-            return null;
+            return ['success' => false, 'error' => 'Неверный или просроченный токен.'];
         }
 
         return ['user' => $user];

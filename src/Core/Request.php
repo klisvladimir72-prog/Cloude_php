@@ -8,6 +8,7 @@ class Request
     private string $route;
     private string $method;
     private array $matches = [];
+    private $user = null;
 
     public function __construct()
     {
@@ -15,20 +16,44 @@ class Request
 
         $input = file_get_contents('php://input');
 
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+
         if ($this->method === "PUT") {
-            parse_str($input, $putData);
-            $this->data = json_decode($input, true) ?: $putData;
+            if (stripos($contentType, 'application/json') !== false) {
+                // JSON
+                $decoded = json_decode($input, true);
+                $this->data = is_array($decoded) ? $decoded : [];
+            } else {
+                // Form data
+                parse_str($input, $parsed);
+                $this->data = is_array($parsed) ? $parsed : [];
+            }
         } else {
             $this->data = json_decode($input, true) ?: $_POST;
         }
 
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $this->route = trim($path, '/');
+        $this->route = trim($path ?? '', '/');
     }
 
     public function setMatches(array $matches): void
     {
         $this->matches = $matches;
+    }
+
+    public function getParam(string $key, $default = null)
+    {
+        return $this->matches[$key] ?? $default;
+    }
+
+    public function setUser($user): void
+    {
+        $this->user = $user;
+    }
+
+    public function getUser()
+    {
+        return $this->user;
     }
 
     public function getMatches(): array

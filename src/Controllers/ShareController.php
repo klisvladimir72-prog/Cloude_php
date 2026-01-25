@@ -42,38 +42,47 @@ class ShareController
     public function shareFile(Request $request, Response $response)
     {
         try {
-            $authResult = AuthMiddleware::handle($request, $response);
-            if (!$authResult) {
-                http_response_code(401);
-                $response->sendHtml('login.php');
-                return;
-            }
 
-            $user = $authResult['user'];
+            $user = $request->getUser();
 
-            $data = $request->getQueryParamsAll();
+            $fileId = $request->getParam('id');
+            $userId = $request->getParam('user_id');
+            $groupId = $request->getParam('group_id');
 
-            if (!isset($data['id']) || empty($data['id'])) {
+            if (!isset($fileId) || empty($fileId)) {
                 http_response_code(400);
                 $response->setData(['success' => false, 'message' => 'ID файла не передано.']);
                 $response->sendJson();
                 return;
             }
 
-            if (!isset($data['user_id']) || count(array_filter($data['user_id'])) === 0) {
+            $userShared = $this->userRepo->find($this->userRepo->getTable(), $userId);
+            if (!$userShared) {
+                http_response_code(404);
+                $response->setData(['success' => false, 'message' => 'Указанного пользователя не найдено.']);
+                $response->sendJson();
+                return;
+            }
+
+            $fileShared = $this->fileRepo->find($this->fileRepo->getTable(), $fileId);
+            if (!$fileShared) {
+                http_response_code(404);
+                $response->setData(['success' => false, 'message' => 'Указанного файла не найдено.']);
+                $response->sendJson();
+                return;
+            }
+
+            if (!$userId) {
                 $userIds = [];
             } else {
-                $userIds = $data['user_id'];
+                $userIds[] = $userId;
             }
 
-            if (!isset($data['group_id']) || count(array_filter($data['group_id'])) === 0) {
+            if (!$groupId) {
                 $groupIds = [];
             } else {
-                $groupIds = $data['group_id'];
+                $groupIds[] = $groupId;
             }
-
-            $fileId = $data['id'];
-
 
 
             $file = $this->fileRepo->find($this->fileRepo->getTable(), $fileId);
@@ -120,15 +129,14 @@ class ShareController
             if (!empty($groupIds)) {
                 $permissions = 'read'; // опционально (на будущее💡)
                 foreach ($groupIds as $groupId) {
-                    // Проверяем, существует ли группа (опционально, но рекомендуется)
+                    // Проверяем, существует ли группа 
                     $group = $this->groupRepo->find($this->groupRepo->getTable(), $groupId);
                     if (!$group) {
                         continue;
                     }
 
                     // Вызываем метод для шаринга файла с группой
-                    // Этот метод уже проверяет транзакции и т.д.
-                    $wasShared = $this->shareByGroupService->shareFile($fileId, $groupId, $permissions, $userId);
+                    $wasShared = $this->shareByGroupService->shareFile($fileId, $groupId, $permissions, $user->id);
                     if (isset($wasShared['success']['success'])) {
 
                         $successCount++; // в случае если шарили, то обновляем permissions 
@@ -182,29 +190,24 @@ class ShareController
     public function removeShareFile(Request $request, Response $response)
     {
         try {
-            $authResult = AuthMiddleware::handle($request, $response);
-            if (!$authResult) {
-                http_response_code(401);
-                $response->setData(['success' => false, 'message' => 'Пользователь не авторизован.']);
-                $response->sendJson();
-                return;
-            }
 
-            $user = $authResult['user'];
+            $user = $request->getUser();
 
-            $data = $request->getQueryParamsAll();
+            $fileId = $request->getParam('id');
+            $userId = $request->getParam('user_id');
 
-            if (!isset($data['id']) || empty($data['id'])) {
+
+            if (!isset($fileId)) {
                 http_response_code(400);
                 $response->setData(['success' => false, 'message' => 'ID файла не передано.']);
                 $response->sendJson();
                 return;
             }
 
-            if (!isset($data['user_id']) || count(array_filter($data['user_id'])) === 0) {
+            if (!isset($userId)) {
                 $userIds = [];
             } else {
-                $userIds = $data['user_id'];
+                $userIds[] = $userId;
             }
 
             if (!isset($data['group_id']) || count(array_filter($data['group_id'])) === 0) {
@@ -213,10 +216,22 @@ class ShareController
                 $groupIds = $data['group_id'];
             }
 
+            $userByShared = $this->userRepo->find($this->userRepo->getTable(), $userId);
+            if (!$userByShared) {
+                http_response_code(404);
+                $response->setData(['success' => false, 'message' => 'Пользователя не найдено.']);
+                $response->sendJson();
+                return;
+            }
 
-            $fileId = $data['id'];
 
             $file = $this->fileRepo->find($this->fileRepo->getTable(), $fileId);
+            if (!$file) {
+                http_response_code(404);
+                $response->setData(['success' => false, 'message' => 'Файла не найдено.']);
+                $response->sendJson();
+                return;
+            }
 
             $isOwner = $this->fileService->isPermissions($user, $file);
             if (!$isOwner) {
@@ -426,11 +441,19 @@ class ShareController
                 return;
             }
 
-            $fileId = $request->getQueryParam('id');
+            $fileId = $request->getParam('id');
 
             if (!$fileId) {
                 http_response_code(400);
                 $response->setData(['success' => false, 'message' => 'ID файла обязательно.']);
+                $response->sendJson();
+                return;
+            }
+
+            $file = $this->fileRepo->find($this->fileRepo->getTable(), $fileId);
+            if (!$file) {
+                http_response_code(404);
+                $response->setData(['success' => false, 'message' => 'Такого файла не существует.']);
                 $response->sendJson();
                 return;
             }

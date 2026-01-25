@@ -96,7 +96,7 @@ class UserController
     {
         $userRepo = App::getService('user_repository');
 
-        $email = $request->getQueryParam('email');
+        $email = $request->getParam('email');
         if (!$email) {
             http_response_code(500);
             $response->setData(['success' => false, 'message' => 'email отсутствует.']);
@@ -104,6 +104,12 @@ class UserController
             return;
         }
 
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400);
+            $response->setData(['success' => false, 'message' => "Email не валиден."]);
+            $response->sendJson();
+            return;
+        }
 
         $user = $userRepo->findBy($userRepo->getTable(), ["email" => $email]);
 
@@ -136,7 +142,7 @@ class UserController
     {
         $userRepo = App::getService('user_repository');
 
-        $user_id = $request->getQueryParam('id');
+        $user_id = $request->getParam('id');
 
         if (!$user_id) {
             http_response_code(500);
@@ -175,18 +181,13 @@ class UserController
      */
     public function updateUserFieldByUser(Request $request, Response $response)
     {
-        $authResult = AuthMiddleware::handle($request, $response);
-        if (!$authResult) {
-            http_response_code(401);
-            $response->sendHtml('login.php');
-            return;
-        }
-
         // Получаем объект пользователя (необязательно, можно использовать его данные)
-        $user = $authResult['user'];
+        $user = $request->getUser();
         $userId = $user->id;
 
         $data = $request->getData();
+
+        $data = isset($data['data']) ? $data['data'] : $data;
 
 
         // Запрет на смену пароля, id, роли
@@ -221,6 +222,14 @@ class UserController
         $userRepo = App::getService('user_repository');
         foreach ($data as $field => $value) {
             if ($field === 'email' || $field === 'login') {
+                if ($field === 'email') {
+                    if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                        http_response_code(400);
+                        $response->setData(['success' => false, 'message' => "Email не валиден."]);
+                        $response->sendJson();
+                        return;
+                    }
+                }
                 $existingUser = $userRepo->findForAuth($value);
                 if ($existingUser && $existingUser['id'] != $userId) {
                     http_response_code(400);
@@ -230,6 +239,8 @@ class UserController
                 }
             }
         }
+
+
 
         $success = $userRepo->update($userId, $data);
 

@@ -2,6 +2,8 @@
 
 namespace Src\Core;
 
+use Src\Middleware\AuthMiddleware;
+
 class Router
 {
     private array $routes = [
@@ -25,6 +27,34 @@ class Router
         }
     }
 
+    /**
+     * Роутинг с проверкой на авторизацию пользователя
+     *
+     * @param string $method
+     * @param string $path
+     * @param callable $callback
+     * @return void
+     */
+    public function addSecureByAuth(string $method, string $path, callable $callback): void
+    {
+        $wrapper = function (Request $request, Response $response) use ($callback) {
+            $authResult = AuthMiddleware::handle($request, $response);
+
+            if (isset($authResult['error'])) {
+                $response->setData(['error' => "Доступ запрещен."]);
+                $response->sendJson();
+                return;
+            }
+
+            $user = $authResult['user'];
+            $request->setUser($user);
+
+            return $callback($request, $response, $user);
+        };
+
+        $this->add($method, $path, $wrapper);
+    }
+
     private function convertToRegex(string $path): string
     {
         // Разбиваем строку по шаблонным параметрам
@@ -46,17 +76,17 @@ class Router
         return '#^' . $regex . '$#'; // <-- Используем # как ограничитель
     }
 
-    public function processRequest(Request $request): Response
+    public function processRequest(Request $request)
     {
+        $response = new Response();
         $method = $request->getMethod();
         $path = $request->getRoute();
 
         // Проверяем точные маршруты
         if (isset($this->routes[$method][$path])) {
-            $response = new Response();
             $callback = $this->routes[$method][$path];
             $callback($request, $response);
-            return $response;
+            return;
         }
 
         // Проверяем шаблонные маршруты
@@ -65,18 +95,16 @@ class Router
                 if (preg_match($route['pattern'], $path, $matches)) {
                     unset($matches[0]); // убираем полное совпадение
                     $request->setMatches($matches);
-
-                    $response = new Response();
                     $callback = $route['callback'];
                     $callback($request, $response);
-                    return $response;
+                    return;
                 }
             }
         }
 
         http_response_code(404);
-        $response = new Response();
-        $response->setData(['error' => 'Маршрут не найден']);
-        return $response;
+        $response->setData(['success' => false, 'error' => 'Маршрут не найден']);
+        $response->sendJson();
+        return;
     }
 }

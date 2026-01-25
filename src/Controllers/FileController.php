@@ -29,7 +29,7 @@ class FileController
     public function authenticateUser(Request $request, Response $response): ?User
     {
         $authResult = AuthMiddleware::handle($request, $response);
-        if (!$authResult) {
+        if (isset($authResult['error'])) {
             $response->sendHtml('login.php');
         };
         return $authResult['user'];
@@ -68,7 +68,7 @@ class FileController
     public function getFilesListById(Request $request, Response $response)
     {
         try {
-            $user_id = $request->getQueryParam('id');
+            $user_id = $request->getParam('id');
 
             if (!$user_id) {
                 http_response_code(500);
@@ -101,16 +101,22 @@ class FileController
     public function getFileByFileId(Request $request, Response $response)
     {
         try {
-            $file_id = $request->getQueryParam('id');
+            $file_id = $request->getParam('id');
 
             if (!$file_id) {
-                http_response_code(500);
+                http_response_code(400);
                 $response->setData(['success' => false, "message" => "id файла отсутствует."]);
                 $response->sendJson();
                 return;
             }
 
             $file = $this->fileRepo->findBy($this->fileRepo->getTable(), ["id" => $file_id]);
+
+            if (!$file) {
+                http_response_code(404);
+                $response->setData(['success' => false, 'message' => "Файла не найдено."]);
+                $response->sendJson();
+            }
 
             http_response_code(200);
             $response->setData(['success' => true, 'file' => $file]);
@@ -607,7 +613,7 @@ class FileController
         try {
             $data = $request->getData();
             $fileId = $data['file_id'] ?? null;
-            $fileNewName = $data['new_name'];
+            $fileNewName = trim($data['new_name']);
 
             if (!$fileId) {
                 http_response_code(400);
@@ -628,7 +634,7 @@ class FileController
             $isOwner = $this->fileService->isPermissions($user, $file);
             if (!$isOwner) {
                 http_response_code(409);
-                $response->setData(['success' => false, 'message' => "Нет прав на удаление файла."]);
+                $response->setData(['success' => false, 'message' => "Нет прав на изменение файла."]);
                 $response->sendJson();
                 return;
             }
@@ -642,7 +648,7 @@ class FileController
             $isUniqueName = $this->fileService->isUniqueFileNameByUser($user->id, $fileNewName);
             if (!$isUniqueName) {
                 http_response_code(409);
-                $response->setData(['success' => false, 'message' => "Файл с таким именем у вас уже есть - $fileName."]);
+                $response->setData(['success' => false, 'message' => "Файл с таким именем у вас уже есть - $fileNewName."]);
                 $response->sendJson();
                 return;
             }
@@ -682,7 +688,7 @@ class FileController
             $user = $this->authenticateUser($request, $response);
             if (!$user) return;
 
-            $fileId = $request->getQueryParam('id');
+            $fileId = $request->getParam('id');
 
             if (empty($fileId) || !$fileId) {
                 http_response_code(400);
@@ -742,7 +748,7 @@ class FileController
         if (!$user) return;
 
         try {
-            $fileId = $request->getQueryParam('id');
+            $fileId = $request->getParam('id');
 
             if (!$fileId) {
                 http_response_code(400);

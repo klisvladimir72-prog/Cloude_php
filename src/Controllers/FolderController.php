@@ -55,11 +55,19 @@ class FolderController
             }
 
             $user = $authResult['user'];
-            $folderId = $request->getQueryParam('id');
+            $folderId = $request->getParam('id');
 
             if (!$folderId) {
                 http_response_code(400);
                 $response->setData(['success' => false, 'message' => 'ID папки не указан']);
+                $response->sendJson();
+                return;
+            }
+
+            $folder = $this->folderRepo->find($this->folderRepo->getTable(), $folderId);
+            if (!$folder) {
+                http_response_code(404);
+                $response->setData(['success' => false, 'message' => "Папки не найдено."]);
                 $response->sendJson();
                 return;
             }
@@ -73,7 +81,7 @@ class FolderController
             }
 
             if (empty($content['folders']) && empty($content['files'])) {
-                http_response_code(404);
+                http_response_code(200);
                 $response->setData(['success' => true, 'data' => '']);
                 $response->sendJson();
                 return;
@@ -132,6 +140,16 @@ class FolderController
                 $parentId = null;
             }
 
+            if ($parentId !== null) {
+                $parentFolder = $this->folderRepo->find($this->folderRepo->getTable(), (int)$parentId);
+                if (!$parentFolder) {
+                    http_response_code(404);
+                    $response->setData(['success' => false, 'message' => "Указанной родительской папки не существует."]);
+                    $response->sendJson();
+                    return;
+                }
+            }
+
             $isUniqueFolder = $this->folderService->isUniqueFolderNameByParentFolder($userId, $parentId, $name);
             if (!$isUniqueFolder) {
                 http_response_code(409);
@@ -183,7 +201,7 @@ class FolderController
             // Получаем объект пользователя
             $user = $authResult['user'];
 
-            $folderId = $request->getQueryParam('id');
+            $folderId = $request->getParam('id');
 
             if (!$folderId) {
                 http_response_code(400);
@@ -193,6 +211,12 @@ class FolderController
             }
 
             $folder = $this->folderRepo->find($this->folderRepo->getTable(), $folderId);
+            if (!$folder) {
+                http_response_code(404);
+                $response->setData(['success' => false, 'message' => 'Указанной папки не найдено.']);
+                $response->sendJson();
+                return;
+            }
 
             $isOwner = $this->folderService->isPermissions($user, $folder);
             if (!$isOwner) {
@@ -244,7 +268,7 @@ class FolderController
             $user = $authResult['user'];
 
             $folderId = $request->getData()['id'];
-            $folderNewName = $request->getData()['new_name'];
+            $folderNewName = trim($request->getData()['new_name']);
 
             if (!$folderId) {
                 http_response_code(400);

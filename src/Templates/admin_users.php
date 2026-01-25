@@ -156,8 +156,10 @@
       const response = await fetch(`/admin/users/update?id=${userId}`, {
         method: 'PUT',
         body: JSON.stringify({
-          email: newEmail,
-          login: newLogin
+          data: {
+            email: newEmail,
+            login: newLogin
+          }
         }),
         headers: {
           'Content-Type': 'application/json'

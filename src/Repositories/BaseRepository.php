@@ -71,7 +71,7 @@ abstract class BaseRepository
 
             $filteredData = array_intersect_key($data, array_flip($allowedColumns));
 
-            $filteredData = array_filter($filteredData, fn($value) => !empty($value));
+            $filteredData = array_filter($filteredData, fn($value) => $value !== null);
 
             if (empty($filteredData)) {
                 return true;
@@ -106,9 +106,9 @@ abstract class BaseRepository
     public function find(string $table, int $id)
     {
         $stmt = $this->db->getConnection()->prepare("SELECT * FROM $table WHERE id = :id");
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT); // <-- Теперь PDO известен!
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);       // <-- Здесь тоже!
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function findBy(string $table, array $criteria)

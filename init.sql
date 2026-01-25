@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS shared_resources_by_group (
     INDEX idx_shared_by (shared_by_user_id)
 );
 
--- Таблица для токенов 
+-- Таблица для токенов  авторизации
 CREATE TABLE IF NOT EXISTS user_tokens (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -106,6 +106,15 @@ CREATE TABLE IF NOT EXISTS user_tokens (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE, -- Если пользователь удален, удаляются и его токены
     INDEX idx_token (token), -- Индекс для быстрого поиска по токену
     INDEX idx_expires (expires_at) -- Индекс для очистки просроченных токенов
+);
+
+-- Таблица для токенов сброса пароля 
+CREATE TABLE password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- --- ИНДЕКСЫ ДЛЯ ОПТИМИЗАЦИИ ЗАПРОСОВ ---

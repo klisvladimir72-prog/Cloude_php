@@ -70,7 +70,7 @@ class AdminController
             return;
         }
 
-        $userId = $request->getQueryParam('id');
+        $userId = $request->getParam('id');
 
         if (!$userId) {
             http_response_code(500);
@@ -107,11 +107,19 @@ class AdminController
             return;
         }
 
-        $userId = $request->getQueryParam('id');
+        $userId = $request->getParam('id');
 
         if (!$userId) {
             http_response_code(500);
             $response->setData(['success' => false, "message" => "id пользователя отсутствует."]);
+            $response->sendJson();
+            return;
+        }
+
+        $user = $this->userRepo->find($this->userRepo->getTable(), $userId);
+        if (!$user) {
+            http_response_code(404);
+            $response->setData(['success' => false, 'message' => 'Такого пользователя ен существует.']);
             $response->sendJson();
             return;
         }
@@ -140,7 +148,15 @@ class AdminController
             return;
         }
 
-        $userId = $request->getQueryParam('id');
+        $userId = $request->getParam('id');
+
+        $user = $this->userRepo->find($this->userRepo->getTable(), $userId);
+        if (!$user) {
+            http_response_code(404);
+            $response->setData(['success' => false, 'message' => 'Такого пользователя нет.']);
+            $response->sendJson();
+            return;
+        }
 
         if (!$userId) {
             http_response_code(500);
@@ -149,7 +165,7 @@ class AdminController
             return;
         }
 
-        $data = $request->getData();
+        $data = $request->getData()['dataUser'][0];
 
         if (!is_array($data) || empty($data)) {
             http_response_code(400);
@@ -168,12 +184,31 @@ class AdminController
             }
         }
 
+
+
         foreach ($data as $key => $value) {
             if ($key === 'email' || $key === 'login') {
+                if ($key == 'email') {
+                    if (!filter_var(trim($value), FILTER_VALIDATE_EMAIL)) {
+                        http_response_code(400);
+                        $response->setData(['success' => false, 'message' => 'Email не валиден.']);
+                        $response->sendJson();
+                        return;
+                    }
+                }
                 $existingUser = $this->userRepo->findForAuth($value);
                 if ($existingUser && $existingUser['id'] != $userId) {
                     http_response_code(400);
                     $response->setData(['success' => false, 'message' => "Значение $key - $value уже используется."]);
+                    $response->sendJson();
+                    return;
+                }
+            }
+
+            if ($key === 'role') {
+                if ((int)$value !== 0 && (int)$value !== 1) {
+                    http_response_code(400);
+                    $response->setData(['success' => false, 'message' => "Значение $key - должно быть '0' или '1'"]);
                     $response->sendJson();
                     return;
                 }
@@ -204,11 +239,19 @@ class AdminController
             return;
         }
 
-        $userId = $request->getQueryParam('id');
+        $userId = $request->getParam('id');
 
         if (!$userId) {
             http_response_code(500);
             $response->setData(['success' => false, "message" => "id пользователя отсутствует."]);
+            $response->sendJson();
+            return;
+        }
+
+        $user = $this->userRepo->find($this->userRepo->getTable(), $userId);
+        if (!$user) {
+            http_response_code(404);
+            $response->setData(['success' => false, 'message' => 'Пользователь не найден.']);
             $response->sendJson();
             return;
         }
@@ -232,7 +275,11 @@ class AdminController
         $success = $this->userRepo->update($userId, ['password_hash' => $hashedPassword]);
         if ($success) {
             http_response_code(200);
-            $response->setData(['success' => true, 'message' => 'Пароль успешно изменен.']);
+            if (empty($newPassword)) {
+                $response->setData(['success' => true, 'message' => 'Пароль успешно изменен на стандартный.']);
+            } else {
+                $response->setData(['success' => true, 'message' => 'Пароль успешно изменен.']);
+            }
         } else {
             http_response_code(500);
             $response->setData(['success' => false, 'message' => 'Ошибка при смене пароля.']);
